@@ -1,0 +1,3975 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPIP 2.0 專案時程表</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft JhengHei', '微軟正黑體', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 26px;
+        }
+        .summary {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        
+        /* 模式切換按鈕 */
+        .mode-toggle-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);
+            z-index: 999;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .mode-toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(240, 147, 251, 0.5);
+        }
+        .mode-toggle-btn.view-mode {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        /* 打印按鈕 */
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 180px;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(67, 233, 123, 0.4);
+            z-index: 999;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: none;
+        }
+        .print-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(67, 233, 123, 0.5);
+        }
+        body.view-mode .print-btn {
+            display: block;
+        }
+        
+        /* 瀏覽模式時隱藏編輯元素 */
+        body.view-mode .toolbox,
+        body.view-mode .edit-icon,
+        body.view-mode .delete-item-btn,
+        body.view-mode .add-item-btn,
+        body.view-mode .add-badge-btn,
+        body.view-mode .remove-btn {
+            display: none !important;
+        }
+        body.view-mode .sub-title,
+        body.view-mode .sub-desc,
+        body.view-mode .project-title {
+            cursor: default;
+        }
+        body.view-mode .time-badge {
+            cursor: default;
+        }
+        body.view-mode .time-badge .delete-badge {
+            display: none !important;
+        }
+        
+        /* 類別樣式 */
+        /* 阶段容器 */
+        .phase-section {
+            margin-bottom: 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .phase-section.dragging {
+            opacity: 0.5;
+            cursor: move;
+        }
+        .phase-section.drag-over-top {
+            border-top: 4px solid #667eea;
+            margin-top: 20px;
+        }
+        .phase-section.drag-over-bottom {
+            border-bottom: 4px solid #667eea;
+            margin-bottom: 60px;
+        }
+        .phase-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            display: grid;
+            grid-template-columns: 300px repeat(var(--phase-month-count, 4), 1fr);
+            gap: 0;
+            align-items: stretch;
+        }
+        .phase-header:hover {
+            background: linear-gradient(135deg, #7c8ef5 0%, #8a5bb5 100%);
+        }
+        .phase-info {
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            min-width: 0;
+        }
+        .phase-title-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            cursor: pointer;
+        }
+        .phase-drag-handle {
+            cursor: move;
+            margin-right: 10px;
+            font-size: 18px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            user-select: none;
+            -webkit-user-drag: element;
+            touch-action: none;
+        }
+        .phase-drag-handle:hover {
+            opacity: 1;
+        }
+        body.view-mode .phase-drag-handle {
+            display: none;
+        }
+        .phase-title-row:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .phase-header .phase-title {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-right: 8px;
+            padding: 6px 10px;
+            cursor: text;
+            border-radius: 4px;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+        .phase-header .phase-title:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+        }
+        .phase-toggle {
+            flex-shrink: 0;
+            font-size: 16px;
+            transition: transform 0.3s;
+        }
+        .phase-section.collapsed .phase-toggle {
+            transform: rotate(-90deg);
+        }
+        .phase-header .phase-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 8px 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .phase-month-cell {
+            text-align: center;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            display: grid;
+            grid-template-rows: auto 1fr;
+            min-height: 0;
+        }
+        .phase-month-cell:last-child {
+            border-right: none;
+        }
+        .phase-month-header {
+            padding: 12px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .phase-month-label {
+            font-size: 12px;
+            opacity: 0.95;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+            pointer-events: auto;
+            cursor: default;
+        }
+        .phase-month-label .month-delete-btn {
+            display: none;
+            position: absolute;
+            right: -15px;
+            top: -6px;
+            width: 14px;
+            height: 14px;
+            padding: 0;
+            font-size: 10px;
+            line-height: 12px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .phase-month-label:hover .month-delete-btn {
+            display: block;
+        }
+        .phase-month-content {
+            padding: 6px;
+            min-height: 40px;
+            display: flex;
+            flex-direction: row;
+            gap: 3px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .phase-month-content.drag-over {
+            background-color: rgba(102, 126, 234, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+        }
+        .phase-month-content .status-box {
+            font-size: 10px;
+            padding: 3px 6px;
+            width: auto;
+            flex-shrink: 0;
+        }
+        .phase-section.collapsed .phase-month-cell {
+            min-height: 0;
+        }
+        .phase-section.collapsed .phase-month-header {
+            padding: 8px 6px;
+        }
+        .phase-section.collapsed .phase-month-content {
+            min-height: 30px;
+            padding: 4px;
+        }
+        .phase-section.collapsed .phase-month-content .status-box {
+            font-size: 9px;
+            padding: 2px 4px;
+        }
+        .phase-content {
+            display: block;
+            padding: 20px;
+            background: #fafafa;
+        }
+        .phase-section.collapsed .phase-content {
+            display: none;
+        }
+        .delete-phase-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid white;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            transition: all 0.3s;
+        }
+        .delete-phase-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        body.view-mode .delete-phase-btn {
+            display: none;
+        }
+        .add-phase-month-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid white;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            transition: all 0.3s;
+        }
+        .add-phase-month-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        body.view-mode .add-phase-month-btn {
+            display: none;
+        }
+        .add-phase-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .add-phase-btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .add-phase-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        body.view-mode .add-phase-btn {
+            display: none;
+        }
+        .editable-title {
+            cursor: pointer;
+        }
+        .editable-title:hover {
+            opacity: 0.8;
+        }
+        
+        .category-section {
+            margin-bottom: 30px;
+        }
+        .category-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px 8px 0 0;
+            font-size: 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .category-header .add-item-btn {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 6px 12px;
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .category-header .add-item-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        body.view-mode .category-header .add-item-btn {
+            display: none;
+        }
+        
+        /* 項目內的新增子項目按鈕 */
+        .project-item .add-item-btn {
+            margin: 8px 12px;
+            padding: 5px 10px;
+            background: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .project-item .add-item-btn:hover {
+            background: #cbd5e0;
+        }
+        body.view-mode .project-item .add-item-btn {
+            display: none;
+        }
+        .category-header .add-item-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        .category-header.ui-ux {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .category-header.system-flow {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .category-header.tech-spec {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .timeline-container {
+            background: #fff;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        
+        /* 時程表頭 */
+        .timeline-header {
+            display: grid;
+            grid-template-columns: 300px repeat(var(--month-count, 4), 1fr);
+            gap: 0;
+            padding: 8px 12px;
+            background: rgba(102, 126, 234, 0.08);
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .timeline-header.ui-ux {
+            background: rgba(240, 147, 251, 0.1);
+        }
+        .timeline-header.system-flow {
+            background: rgba(79, 172, 254, 0.1);
+        }
+        .timeline-header.tech-spec {
+            background: rgba(67, 233, 123, 0.1);
+        }
+        .timeline-header > div:first-child {
+            text-align: left;
+        }
+        
+        /* 月份標題 */
+        .month-header {
+            position: relative;
+            text-align: center;
+            padding: 5px;
+            border-radius: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        body:not(.view-mode) .month-header {
+            cursor: pointer;
+        }
+        body:not(.view-mode) .month-header:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        body.view-mode .month-header {
+            cursor: default;
+        }
+        .month-delete-btn {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        body:not(.view-mode) .month-header:hover .month-delete-btn {
+            display: flex;
+        }
+        .add-month-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        body:not(.view-mode) .add-month-btn:hover {
+            background: #5568d3;
+        }
+        body.view-mode .add-month-btn {
+            display: none;
+        }
+        
+        /* 項目樣式 - 扁平化設計 + 時程 */
+        .project-item {
+            border-bottom: 1px solid #d0d0d0;
+            margin-bottom: 0;
+        }
+        .project-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* 子項目 - 帶時程格子 */
+        .sub-item-row {
+            display: grid;
+            grid-template-columns: 300px repeat(var(--month-count, 4), 1fr);
+            gap: 0;
+            border-top: 1px solid #e8e8e8;
+            min-height: 60px;
+            background: #fafbfc;
+        }
+        .sub-item-row:first-of-type {
+            border-top: none;
+        }
+        .sub-item-row:hover {
+            background: #f5f6f7;
+        }
+        
+        .sub-item-info {
+            padding: 10px 15px;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sub-title {
+            font-size: 14px;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: text;
+        }
+        
+        /* 星標圖標 */
+        .star-icon {
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            flex-shrink: 0;
+            margin-right: 2px;
+        }
+        .star-icon.starred {
+            color: #FFD700;
+            text-shadow: 0 0 3px rgba(255, 215, 0, 0.5);
+        }
+        .star-icon:not(.starred) {
+            color: #d0d0d0;
+            opacity: 0.6;
+        }
+        .star-icon:hover {
+            transform: scale(1.2);
+            opacity: 1;
+        }
+        .star-icon.starred:hover {
+            filter: brightness(1.1);
+        }
+        body.view-mode .star-icon {
+            cursor: default;
+            pointer-events: none;
+        }
+        
+        .sub-desc {
+            font-size: 11px;
+            color: #7f8c8d;
+            line-height: 1.5;
+            margin-bottom: 6px;
+            cursor: text;
+        }
+        
+        /* 月份格子（狀態方塊） - 可拖放 */
+        .month-cell {
+            display: flex;
+            align-items: stretch;
+            border-right: 1px solid #e8e8e8;
+            flex-direction: column;
+            position: relative;
+            padding: 4px;
+            min-height: 35px;
+        }
+        .month-cell:last-child {
+            border-right: none;
+        }
+        .month-cell.drag-over {
+            background-color: rgba(102, 126, 234, 0.1);
+            border: 2px dashed #667eea;
+        }
+        /* 瀏覽模式下合併的格子樣式 */
+        body.view-mode .month-cell[data-merge-span] {
+            border-right: none;
+        }
+        body.view-mode .month-cell[data-merge-span] + .month-cell {
+            border-left: none;
+        }
+        
+        /* 狀態方塊 */
+        .status-box {
+            width: 100%;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+            border-radius: 3px;
+            position: relative;
+            min-height: 35px;
+        }
+        .status-box .remove-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 11px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .status-box:hover .remove-btn {
+            display: flex;
+        }
+        
+        /* 狀態顏色 */
+        .status-box.discussion {
+            background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+        }
+        .status-box.development {
+            background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%);
+        }
+        .status-box.completed {
+            background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
+        }
+        .status-box.testing {
+            background: linear-gradient(135deg, #ab47bc 0%, #8e24aa 100%);
+        }
+        .status-box.pending {
+            background: linear-gradient(135deg, #ef5350 0%, #e53935 100%);
+        }
+        
+        /* 狀態工具箱 */
+        .toolbox {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-width: 200px;
+        }
+        .toolbox-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .toolbox-title {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        .toolbox-toggle {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            color: #666;
+        }
+        .status-block {
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+            cursor: move;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .status-block:hover {
+            transform: scale(1.05);
+        }
+        .status-block.dragging {
+            opacity: 0.5;
+        }
+        .status-block.discussion {
+            background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+        }
+        .status-block.development {
+            background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%);
+        }
+        .status-block.completed {
+            background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
+        }
+        .status-block.testing {
+            background: linear-gradient(135deg, #ab47bc 0%, #8e24aa 100%);
+        }
+        .status-block.pending {
+            background: linear-gradient(135deg, #ef5350 0%, #e53935 100%);
+        }
+        .status-block-delete {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        .status-block:hover .status-block-delete {
+            display: flex;
+        }
+        .status-block-delete:hover {
+            background: #c0392b;
+            transform: scale(1.2);
+        }
+        .add-status-btn {
+            width: 100%;
+            padding: 8px;
+            margin-top: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .add-status-btn:hover {
+            opacity: 0.9;
+        }
+        
+        /* 編輯/刪除按鈕 */
+        .edit-icon {
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .edit-icon:hover {
+            opacity: 1;
+        }
+        .delete-item-btn {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        .delete-item-btn:hover {
+            opacity: 1;
+        }
+        
+        /* 詳細說明按鈕 */
+        .detail-desc-btn {
+            background: #cbd5e0;
+            color: #4a5568;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: all 0.2s;
+            margin-left: 4px;
+        }
+        .detail-desc-btn:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        .detail-desc-btn.has-content {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            opacity: 1;
+            box-shadow: 0 2px 4px rgba(79, 172, 254, 0.3);
+        }
+        body.view-mode .detail-desc-btn {
+            display: none;
+        }
+        
+        /* 時間標籤容器 */
+        .time-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        
+        /* 時間標籤樣式 - 可編輯 */
+        .time-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            box-shadow: 0 1px 4px rgba(102, 126, 234, 0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .time-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .time-badge.red {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 2px 6px rgba(240, 147, 251, 0.3);
+        }
+        .time-badge.blue {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            box-shadow: 0 2px 6px rgba(79, 172, 254, 0.3);
+        }
+        .time-badge.green {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            box-shadow: 0 2px 6px rgba(67, 233, 123, 0.3);
+        }
+        .time-badge.orange {
+            background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+            box-shadow: 0 2px 6px rgba(255, 167, 38, 0.3);
+        }
+        .time-badge .delete-badge {
+            display: none;
+            margin-left: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .time-badge:hover .delete-badge {
+            display: inline;
+        }
+        
+        .add-badge-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            background: #e2e8f0;
+            color: #4a5568;
+            border: 1px dashed #cbd5e0;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .add-badge-btn:hover {
+            background: #cbd5e0;
+            border-color: #a0aec0;
+        }
+        
+        /* 模態框樣式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 90%;
+        }
+        .modal-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+            font-size: 13px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        /* 标签类型选择样式 */
+        .form-group input[type="radio"]:checked + span + span {
+            font-weight: bold;
+        }
+        .form-group label:has(input[type="radio"]:checked) {
+            background: #f0f7ff !important;
+            border-color: #667eea !important;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+        .color-picker {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+        .color-option.selected {
+            border-color: #2c3e50;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .modal-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .modal-btn.secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .note {
+            margin-top: 30px;
+            padding: 18px;
+            background: linear-gradient(135deg, #fff9e6 0%, #ffe8cc 100%);
+            border-radius: 12px;
+            border-left: 5px solid #f39c12;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+        .note strong {
+            color: #d68910;
+        }
+        
+        /* 保存提示 */
+        .save-notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 10000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        .save-notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .save-notification.error {
+            background: linear-gradient(135deg, #ef5350 0%, #e53935 100%);
+        }
+        .save-notification .save-icon {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+        
+        /* 數據管理按鈕組 */
+        .data-management-btns {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+            z-index: 999;
+        }
+        .data-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .data-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .export-btn {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        .import-btn {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        .data-btn input[type="file"] {
+            display: none;
+        }
+        
+        /* 打印樣式 - 橫向A4紙張 - 扁平化表格風格 */
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 8mm 6mm;
+            }
+            
+            body {
+                background: white !important;
+                padding: 0 !important;
+                font-size: 7px !important;
+            }
+            
+            .container {
+                max-width: 100% !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                margin: 0 !important;
+                background: white !important;
+            }
+            
+            h1 {
+                font-size: 14px !important;
+                margin-bottom: 3px !important;
+                page-break-after: avoid;
+                font-weight: bold;
+            }
+            
+            .summary {
+                font-size: 8px !important;
+                margin-bottom: 6px !important;
+                page-break-after: avoid;
+            }
+            
+            /* 隱藏不需要打印的元素 */
+            .mode-toggle-btn,
+            .print-btn,
+            .toolbox,
+            .data-management-btns,
+            .save-notification,
+            .note,
+            .add-phase-btn,
+            .add-phase-container,
+            .edit-icon,
+            .delete-item-btn,
+            .add-item-btn,
+            .add-badge-btn,
+            .remove-btn,
+            .delete-phase-btn,
+            .add-phase-month-btn,
+            .month-delete-btn,
+            .add-month-btn,
+            .delete-badge,
+            .status-block-delete,
+            .phase-drag-handle {
+                display: none !important;
+            }
+            
+            /* 階段樣式 - 扁平化 */
+            .phase-section {
+                page-break-inside: avoid;
+                margin-bottom: 8px !important;
+                border: 1px solid #666 !important;
+                border-radius: 0 !important;
+            }
+            
+            .phase-header {
+                background: #667eea !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                color: white !important;
+                font-size: 10px !important;
+                min-height: 0 !important;
+            }
+            
+            .phase-info {
+                padding: 0 !important;
+            }
+            
+            .phase-title-row {
+                padding: 4px 8px !important;
+            }
+            
+            .phase-title {
+                font-size: 10px !important;
+                font-weight: bold !important;
+                padding: 0 !important;
+            }
+            
+            .phase-toggle {
+                display: none !important;
+            }
+            
+            .phase-controls {
+                display: none !important;
+            }
+            
+            .phase-month-header {
+                font-size: 7px !important;
+                padding: 3px 1px !important;
+                background: rgba(0, 0, 0, 0.1) !important;
+            }
+            
+            .phase-month-label {
+                font-size: 7px !important;
+            }
+            
+            .phase-month-content {
+                min-height: 18px !important;
+                padding: 1px !important;
+                gap: 1px !important;
+            }
+            
+            .phase-month-content .status-box {
+                font-size: 6px !important;
+                padding: 1px 3px !important;
+                min-height: 16px !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            /* 確保展開所有折疊的階段 */
+            .phase-section.collapsed .phase-content {
+                display: block !important;
+            }
+            
+            .phase-section.collapsed .phase-toggle {
+                transform: none !important;
+            }
+            
+            /* 分類樣式 - 扁平化 */
+            .category-section {
+                page-break-inside: avoid;
+                margin-bottom: 5px !important;
+            }
+            
+            .category-header {
+                background: #667eea !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                padding: 3px 6px !important;
+                font-size: 9px !important;
+                border-radius: 0 !important;
+            }
+            
+            .category-header.ui-ux {
+                background: #f5576c !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .category-header.system-flow {
+                background: #00f2fe !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .category-header.tech-spec {
+                background: #38f9d7 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            /* 時程表樣式 - 扁平化 */
+            .timeline-header {
+                font-size: 7px !important;
+                padding: 2px 4px !important;
+                background: #e0e0e0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                border-bottom: 1px solid #999 !important;
+            }
+            
+            .timeline-container {
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                border: 1px solid #999 !important;
+            }
+            
+            /* 項目樣式 - 緊湊 */
+            .project-item {
+                page-break-inside: avoid;
+                border-bottom: 1px solid #ccc !important;
+            }
+            
+            .sub-item-row {
+                min-height: 22px !important;
+                font-size: 7px !important;
+                background: white !important;
+            }
+            
+            .sub-item-row:hover {
+                background: white !important;
+            }
+            
+            .sub-item-info {
+                padding: 2px 4px !important;
+                border-right: 1px solid #ccc !important;
+            }
+            
+            .sub-title {
+                font-size: 8px !important;
+                margin-bottom: 1px !important;
+                font-weight: 600 !important;
+            }
+            
+            /* 星標在打印時顯示 */
+            .star-icon {
+                font-size: 8px !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .star-icon:not(.starred) {
+                display: none !important;
+            }
+            
+            .sub-desc {
+                font-size: 6px !important;
+                margin-bottom: 1px !important;
+                color: #555 !important;
+            }
+            
+            /* 時間標籤 - 緊湊 */
+            .time-badges {
+                gap: 2px !important;
+                margin-top: 1px !important;
+            }
+            
+            .time-badge {
+                font-size: 6px !important;
+                padding: 1px 4px !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            /* 月份格子 - 緊湊 */
+            .month-cell {
+                padding: 1px !important;
+                min-height: 20px !important;
+                border-right: 1px solid #ddd !important;
+            }
+            
+            .month-header {
+                font-size: 7px !important;
+                padding: 2px !important;
+                background: #e0e0e0 !important;
+            }
+            
+            /* 狀態方塊 - 緊湊 */
+            .status-box {
+                font-size: 6px !important;
+                min-height: 18px !important;
+                border-radius: 1px !important;
+                padding: 1px 2px !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            /* 確保顏色正確打印 */
+            .status-box.discussion,
+            .status-box.development,
+            .status-box.completed,
+            .status-box.testing,
+            .status-box.pending,
+            .time-badge.red,
+            .time-badge.blue,
+            .time-badge.green,
+            .time-badge.orange,
+            .time-badge.purple {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            /* Grid 布局調整 */
+            .phase-header,
+            .timeline-header,
+            .sub-item-row {
+                gap: 0 !important;
+            }
+            
+            /* 移除所有圓角和陰影 */
+            .phase-section,
+            .category-section,
+            .timeline-container,
+            .category-header {
+                border-radius: 0 !important;
+                box-shadow: none !important;
+            }
+            
+            /* 階段內容區域 */
+            .phase-content {
+                padding: 8px !important;
+                background: #fafafa !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1 ondblclick="editText(this)" class="editable-title">SPIP 2.0 專案時程表</h1>
+        <div class="summary" ondblclick="editText(this)" style="cursor: pointer;">
+            <strong>討論核心：</strong>本專案聚焦於系統流程設計、UI/UX 設計與系統功能技術規格的整合開發
+        </div>
+
+        <!-- 阶段容器 -->
+        <div id="phasesContainer"></div>
+        
+        <!-- 新增阶段按钮 -->
+        <div class="add-phase-container">
+            <button class="add-phase-btn" onclick="addPhase()">➕ 新增階段</button>
+        </div>
+
+        <!-- 模式切換按鈕 -->
+        <button class="mode-toggle-btn" id="modeToggleBtn" onclick="toggleViewEditMode()">
+            🎨 編輯模式
+        </button>
+        
+        <!-- 打印按鈕 -->
+        <button class="print-btn" id="printBtn" onclick="printTimeline()">
+            🖨️ 打印時程表
+        </button>
+        
+        <!-- 保存提示 -->
+        <div class="save-notification" id="saveNotification">
+            <span class="save-icon">✓</span>
+            <span>已保存</span>
+        </div>
+        
+        <!-- 數據管理按鈕 -->
+        <div class="data-management-btns">
+            <button class="data-btn export-btn" onclick="exportData()" title="導出數據為JSON文件">
+                📥 導出數據
+            </button>
+            <button class="data-btn import-btn" onclick="document.getElementById('importFile').click()" title="從JSON文件匯入數據">
+                📤 匯入數據
+                <input type="file" id="importFile" accept=".json" onchange="importData(event)">
+            </button>
+        </div>
+
+        <!-- 狀態工具箱 -->
+        <div class="toolbox" id="toolbox">
+            <div class="toolbox-header">
+                <span class="toolbox-title">📦 狀態工具箱</span>
+                <button class="toolbox-toggle" onclick="toggleToolbox()">✕</button>
+            </div>
+            <div id="statusBlocks">
+                <div class="status-block discussion" draggable="true" data-status="discussion">討論</div>
+                <div class="status-block development" draggable="true" data-status="development">開發</div>
+                <div class="status-block completed" draggable="true" data-status="completed">完成</div>
+                <div class="status-block testing" draggable="true" data-status="testing">📋 內測</div>
+                <div class="status-block pending" draggable="true" data-status="pending">待定</div>
+            </div>
+            <button class="add-status-btn" onclick="showAddStatusModal()">➕ 新增狀態</button>
+        </div>
+
+        <!-- 新增狀態模態框 -->
+        <div id="addStatusModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">新增自訂狀態</div>
+                <div class="form-group">
+                    <label>狀態名稱</label>
+                    <input type="text" id="newStatusName" placeholder="例如：審核中">
+                </div>
+                <div class="form-group">
+                    <label>選擇顏色</label>
+                    <div class="color-picker" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
+                        <div class="color-preset" style="width: 35px; height: 35px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; background: #FFB74D;" data-color="#FFB74D" title="淺橘"></div>
+                        <div class="color-preset" style="width: 35px; height: 35px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; background: #64B5F6;" data-color="#64B5F6" title="淺藍"></div>
+                        <div class="color-preset" style="width: 35px; height: 35px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; background: #81C784;" data-color="#81C784" title="淺綠"></div>
+                        <div class="color-preset" style="width: 35px; height: 35px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; background: #BA68C8;" data-color="#BA68C8" title="淺紫"></div>
+                        <div class="color-preset" style="width: 35px; height: 35px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; background: #E57373;" data-color="#E57373" title="淺紅"></div>
+                        <div class="color-preset" style="width: 35px; height: 35px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; background: #FFD54F;" data-color="#FFD54F" title="淺黃"></div>
+                    </div>
+                    <input type="color" id="newStatusColor" value="#9c27b0" style="width: 100%; height: 40px; cursor: pointer; border-radius: 6px;">
+                </div>
+                <div class="modal-actions">
+                    <button class="modal-btn secondary" onclick="closeAddStatusModal()">取消</button>
+                    <button class="modal-btn primary" onclick="addCustomStatus()">新增</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 備註 -->
+        <div class="note">
+            <strong>💡 使用說明：</strong><br>
+            • <strong>編輯/瀏覽模式：</strong>點擊右上角按鈕切換編輯和瀏覽模式<br>
+            • <strong>🖨️ 打印功能：</strong>進入瀏覽模式後，點擊「打印時程表」按鈕即可列印（橫向A4格式），打印時會自動展開所有折疊的階段<br>
+            • <strong>⭐ 星標標記：</strong>點擊項目標題前的星號（☆/★）可標記重要項目，已標記的項目會顯示金色星星，方便快速識別重點項目<br>
+            • <strong>拖放狀態：</strong>從右側工具箱拖曳狀態方塊到月份格子中，設定各月份的狀態<br>
+            • <strong>編輯文字：</strong>雙擊任何標題或說明文字即可編輯，或點擊 ✏️ 圖示<br>
+            • <strong>📋 詳細說明：</strong>點擊項目旁的 📋 按鈕可新增/查看詳細說明（支持長文本）<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;詳細說明不會顯示在時程表中，但會包含在導出和 Notion 同步中<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;有詳細說明的項目，📋 按鈕會顯示為藍色高亮<br>
+            • <strong>🏷️ 標籤類型：</strong>點擊「+ 時間標籤」可新增不同類型的標籤：<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;🗓️ 時間節點（里程碑、目標日期）<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;🖥️ 隸屬系統（歸屬的系統或模組）<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;📝 待確認筆記（需要確認的事項）<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;🏷️ 其他標記<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;雙擊標籤可編輯，導出到 Notion 時會自動分類到對應欄位<br>
+            • <strong>新增項目：</strong>點擊類別右上角的「➕ 新增項目」按鈕<br>
+            • <strong>新增子項目：</strong>點擊項目底部的「➕ 新增子項目」按鈕<br>
+            • <strong>刪除：</strong>點擊 🗑️ 按鈕刪除項目或子項目，滑鼠移到狀態方塊或時間標籤上可看到刪除按鈕<br>
+            • <strong>🔒 數據備份：</strong>點擊右下角「📥 導出數據」將所有資料下載為JSON文件進行備份<br>
+            • <strong>🔓 數據恢復：</strong>點擊右下角「📤 匯入數據」可從JSON文件恢復之前備份的資料
+        </div>
+    </div>
+
+    <!-- 新增/編輯時間標籤模態框 -->
+    <div class="modal" id="badgeModal">
+        <div class="modal-content">
+            <div class="modal-header">新增標籤</div>
+            <div class="form-group">
+                <label>標籤類型</label>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="display: flex; align-items: center; cursor: pointer; padding: 8px; border: 2px solid #e0e0e0; border-radius: 6px; transition: all 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="if(!this.querySelector('input').checked) this.style.background='white'">
+                        <input type="radio" name="badgeType" value="time" style="margin-right: 8px;" checked>
+                        <span style="font-size: 16px; margin-right: 6px;">🗓️</span>
+                        <span style="font-weight: 500;">時間節點</span>
+                        <span style="margin-left: auto; font-size: 11px; color: #999;">→ Notion: 時間標籤</span>
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer; padding: 8px; border: 2px solid #e0e0e0; border-radius: 6px; transition: all 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="if(!this.querySelector('input').checked) this.style.background='white'">
+                        <input type="radio" name="badgeType" value="system" style="margin-right: 8px;">
+                        <span style="font-size: 16px; margin-right: 6px;">🖥️</span>
+                        <span style="font-weight: 500;">隸屬系統</span>
+                        <span style="margin-left: auto; font-size: 11px; color: #999;">→ Notion: 隸屬系統</span>
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer; padding: 8px; border: 2px solid #e0e0e0; border-radius: 6px; transition: all 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="if(!this.querySelector('input').checked) this.style.background='white'">
+                        <input type="radio" name="badgeType" value="note" style="margin-right: 8px;">
+                        <span style="font-size: 16px; margin-right: 6px;">📝</span>
+                        <span style="font-weight: 500;">待確認筆記</span>
+                        <span style="margin-left: auto; font-size: 11px; color: #999;">→ Notion: 待確認筆記</span>
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer; padding: 8px; border: 2px solid #e0e0e0; border-radius: 6px; transition: all 0.2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="if(!this.querySelector('input').checked) this.style.background='white'">
+                        <input type="radio" name="badgeType" value="other" style="margin-right: 8px;">
+                        <span style="font-size: 16px; margin-right: 6px;">🏷️</span>
+                        <span style="font-weight: 500;">其他標記</span>
+                        <span style="margin-left: auto; font-size: 11px; color: #999;">→ Notion: 時間標籤</span>
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>標籤文字</label>
+                <input type="text" id="badgeText" placeholder="例如：2024/05 或 登入系統">
+            </div>
+            <div class="form-group">
+                <label>選擇顏色</label>
+                <div class="color-picker">
+                    <div class="color-option" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" data-color="red"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);" data-color="blue"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);" data-color="green"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);" data-color="orange"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" data-color="purple"></div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn secondary" onclick="closeBadgeModal()">取消</button>
+                <button class="modal-btn primary" onclick="saveBadge()">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增項目模態框 -->
+    <div class="modal" id="addProjectModal">
+        <div class="modal-content">
+            <div class="modal-header">新增項目</div>
+            <div class="form-group">
+                <label>項目名稱</label>
+                <input type="text" id="projectName" placeholder="請輸入項目名稱">
+            </div>
+            <div class="form-group">
+                <label>項目說明（選填）</label>
+                <input type="text" id="projectDesc" placeholder="請輸入項目說明">
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn secondary" onclick="closeAddProjectModal()">取消</button>
+                <button class="modal-btn primary" onclick="confirmAddProject()">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增子項目模態框 -->
+    <div class="modal" id="addSubItemModal">
+        <div class="modal-content">
+            <div class="modal-header">新增子項目</div>
+            <div class="form-group">
+                <label>子項目名稱</label>
+                <input type="text" id="subItemName" placeholder="請輸入子項目名稱">
+            </div>
+            <div class="form-group">
+                <label>說明（選填）</label>
+                <input type="text" id="subItemDesc" placeholder="請輸入說明">
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn secondary" onclick="closeAddSubItemModal()">取消</button>
+                <button class="modal-btn primary" onclick="confirmAddSubItem()">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 詳細說明模態框 -->
+    <div class="modal" id="detailDescModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">詳細說明</div>
+            <div class="form-group">
+                <label>項目名稱：<span id="detailDescItemName" style="color: #667eea; font-weight: bold;"></span></label>
+            </div>
+            <div class="form-group">
+                <label>詳細描述（支持長文本）</label>
+                <textarea id="detailDescText" rows="10" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; resize: vertical;" placeholder="在此輸入詳細說明，支持多行文字...
+
+例如：
+異動項目改申請項目，若有額外的異動事項，就不呈現在申請項目和申請書上面。會轉掉為一站式更主檔相關申請事項..."></textarea>
+                <div style="margin-top: 5px; font-size: 11px; color: #999;">
+                    <span id="charCount">0</span> 字元 | 此說明不會顯示在時程表中，但會包含在導出和 Notion 同步中
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn secondary" onclick="closeDetailDescModal()">取消</button>
+                <button class="modal-btn primary" onclick="saveDetailDesc()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isViewMode = false;
+        let editingBadge = null;
+        let targetBadgeContainer = null;
+        let selectedColor = 'purple';
+        let selectedBadgeType = 'time';
+        let currentDetailDescElement = null;
+        
+        // 標籤類型圖標映射
+        const badgeTypeIcons = {
+            'time': '🗓️',
+            'system': '🖥️',
+            'note': '📝',
+            'other': '🏷️'
+        };
+
+        // 初始化拖放功能
+        function initializeDragAndDrop() {
+            // 狀態塊拖動
+            document.addEventListener('dragstart', function(e) {
+                if (e.target.classList.contains('status-block')) {
+                    // 如果是自訂狀態（有 custom- 前綴），由 addStatusBlock 中的事件處理器處理
+                    if (e.target.dataset.status && e.target.dataset.status.startsWith('custom-')) {
+                        // 自訂狀態由 addStatusBlock 中的個別事件處理器處理
+                        // 這裡只需要添加 dragging 樣式
+                        e.target.classList.add('dragging');
+                        return;
+                    }
+                    
+                    // 處理預設狀態區塊（討論、開發、完成、內測、待定）
+                    e.target.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'copy';
+                    
+                    // 取得實際顯示的文字（中文）
+                    const statusText = e.target.textContent.trim();
+                    e.dataTransfer.setData('text/plain', statusText);
+                    e.dataTransfer.setData('status', e.target.dataset.status);
+                }
+            });
+            
+            document.addEventListener('dragend', function(e) {
+                if (e.target.classList.contains('status-block')) {
+                    e.target.classList.remove('dragging');
+                }
+            });
+            
+            // 月份格子接受拖放
+            const cells = document.querySelectorAll('.sub-item-row .month-cell, .phase-month-content');
+            cells.forEach(cell => {
+                initializeCellDragAndDrop(cell);
+            });
+        }
+
+        // 為單個格子初始化拖拽功能
+        function initializeCellDragAndDrop(cell) {
+            // 檢查是否已經初始化過，避免重複添加監聽器
+            if (cell.dataset.dragInitialized === 'true') {
+                return;
+            }
+            cell.dataset.dragInitialized = 'true';
+            
+            cell.addEventListener('dragover', function(e) {
+                if (isViewMode) return;
+                e.preventDefault();
+                if (e.dataTransfer) {
+                    e.dataTransfer.dropEffect = 'copy';
+                }
+                this.classList.add('drag-over');
+            });
+            
+            cell.addEventListener('dragleave', function(e) {
+                this.classList.remove('drag-over');
+            });
+            
+            cell.addEventListener('drop', function(e) {
+                if (isViewMode) return;
+                e.preventDefault();
+                e.stopPropagation();  // 防止事件冒泡
+                this.classList.remove('drag-over');
+                
+                const statusText = e.dataTransfer.getData('text/plain');
+                const statusId = e.dataTransfer.getData('status') || statusText;
+                const customColor = e.dataTransfer.getData('color');
+                
+                // 統一處理：每次拖拽都清空後只添加一個 status-box
+                this.innerHTML = '';
+                
+                const statusBox = document.createElement('div');
+                statusBox.className = 'status-box';
+                statusBox.textContent = statusText;
+                statusBox.dataset.status = statusId;
+                
+                // 如果有自訂顏色，使用自訂顏色；否則使用預設CSS類
+                if (customColor) {
+                    statusBox.style.background = `linear-gradient(135deg, ${customColor} 0%, ${adjustColor(customColor, -20)} 100%)`;
+                    statusBox.dataset.customColor = customColor;
+                } else {
+                    statusBox.classList.add(statusId);
+                }
+                
+                // 添加刪除按鈕
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.innerHTML = '×';
+                removeBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    this.parentElement.remove();
+                    saveData();
+                };
+                
+                statusBox.appendChild(removeBtn);
+                this.appendChild(statusBox);
+                saveData();
+            });
+        }
+
+        // 切換工具箱
+        function toggleToolbox() {
+            document.getElementById('toolbox').style.display = 'none';
+        }
+
+        // 切換編輯/瀏覽模式
+        function toggleViewEditMode() {
+            isViewMode = !isViewMode;
+            const btn = document.getElementById('modeToggleBtn');
+            
+            if (isViewMode) {
+                document.body.classList.add('view-mode');
+                btn.textContent = '👁️ 瀏覽模式';
+                btn.classList.add('view-mode');
+                mergeAdjacentStatuses();
+            } else {
+                document.body.classList.remove('view-mode');
+                btn.textContent = '🎨 編輯模式';
+                btn.classList.remove('view-mode');
+                unmergeStatuses();
+            }
+        }
+        
+        // 打印時程表
+        function printTimeline() {
+            // 確保所有階段都展開以便打印
+            const collapsedPhases = [];
+            document.querySelectorAll('.phase-section.collapsed').forEach(phase => {
+                collapsedPhases
+                phase.classList.remove('collapsed');
+            });
+            
+            // 執行打印
+            setTimeout(() => {
+                window.print();
+                
+                // 打印完成後恢復折疊狀態
+                setTimeout(() => {
+                    collapsedPhases.forEach(phase => {
+                        phase.classList.add('collapsed');
+                    });
+                }, 100);
+            }, 100);
+        }
+        
+        // 合併相鄰相同狀態
+        function mergeAdjacentStatuses() {
+            // 处理项目行的合并
+            document.querySelectorAll('.sub-item-row').forEach(row => {
+                const cells = Array.from(row.querySelectorAll('.month-cell'));
+                
+                // 第一步：同一栏内相同色块合并
+                cells.forEach(cell => {
+                    const statusBoxes = Array.from(cell.querySelectorAll('.status-box'));
+                    if (statusBoxes.length > 1) {
+                        // 按颜色分组
+                        const colorGroups = {};
+                        statusBoxes.forEach(box => {
+                            const key = box.dataset.customColor || box.dataset.status;
+                            if (!colorGroups[key]) {
+                                colorGroups[key] = [];
+                            }
+                            colorGroups[key].push(box);
+                        });
+                        
+                        // 如果有相同颜色的状态块，合并它们
+                        Object.values(colorGroups).forEach(group => {
+                            if (group.length > 1) {
+                                // 保留第一个，隐藏其他的
+                                for (let i = 1; i < group.length; i++) {
+                                    group[i].style.display = 'none';
+                                    group[i].dataset.mergedInColumn = 'true';
+                                }
+                            }
+                        });
+                    }
+                });
+                
+                // 第二步：跨栏合并（只有当格子内只有单一颜色时才合并）
+                let i = 0;
+                while (i < cells.length) {
+                    const cell = cells[i];
+                    // 获取所有可见的状态块（排除被同栏合并隐藏的）
+                    const statusBoxes = Array.from(cell.querySelectorAll('.status-box')).filter(box => 
+                        box.style.display !== 'none'
+                    );
+                    
+                    // 只有当格子内只有一个可见状态块时才考虑跨栏合并
+                    if (statusBoxes.length === 1) {
+                        const statusBox = statusBoxes[0];
+                        const statusId = statusBox.dataset.status;
+                        const customColor = statusBox.dataset.customColor;
+                        let spanCount = 1;
+                        
+                        // 检查后续相邻格子
+                        for (let j = i + 1; j < cells.length; j++) {
+                            const nextCell = cells[j];
+                            const nextStatusBoxes = Array.from(nextCell.querySelectorAll('.status-box')).filter(box => 
+                                box.style.display !== 'none'
+                            );
+                            
+                            // 只有当下一个格子也只有一个可见状态块且颜色相同时才合并
+                            if (nextStatusBoxes.length === 1) {
+                                const nextStatusBox = nextStatusBoxes[0];
+                                if (nextStatusBox.dataset.status === statusId &&
+                                    nextStatusBox.dataset.customColor === customColor) {
+                                    spanCount++;
+                                    nextCell.dataset.merged = 'true';
+                                    nextCell.style.display = 'none';
+                                } else {
+                                    break;
+                                }
+                            } else {
+                                break;
+                            }
+                        }
+                        
+                        // 如果有跨栏合并，设置 grid-column
+                        if (spanCount > 1) {
+                            cell.dataset.mergeSpan = spanCount;
+                            cell.style.gridColumn = `span ${spanCount}`;
+                        }
+                        
+                        i += spanCount;
+                    } else {
+                        i++;
+                    }
+                }
+            });
+            
+            // 处理阶段层的合并
+            document.querySelectorAll('.phase-header').forEach(phaseHeader => {
+                const monthCells = Array.from(phaseHeader.querySelectorAll('.phase-month-cell'));
+                
+                // 第一步：同一栏内相同色块合并
+                monthCells.forEach(cell => {
+                    const content = cell.querySelector('.phase-month-content');
+                    if (!content) return;
+                    
+                    const statusBoxes = Array.from(content.querySelectorAll('.status-box'));
+                    if (statusBoxes.length > 1) {
+                        // 按颜色分组
+                        const colorGroups = {};
+                        statusBoxes.forEach(box => {
+                            const key = box.dataset.customColor || box.dataset.status;
+                            if (!colorGroups[key]) {
+                                colorGroups[key] = [];
+                            }
+                            colorGroups[key].push(box);
+                        });
+                        
+                        // 如果有相同颜色的状态块，合并它们
+                        Object.values(colorGroups).forEach(group => {
+                            if (group.length > 1) {
+                                // 保留第一个，隐藏其他的
+                                for (let i = 1; i < group.length; i++) {
+                                    group[i].style.display = 'none';
+                                    group[i].dataset.mergedInColumn = 'true';
+                                }
+                            }
+                        });
+                    }
+                });
+                
+                // 第二步：跨栏合并（只有当格子内只有单一颜色时才合并）
+                let i = 0;
+                while (i < monthCells.length) {
+                    const cell = monthCells[i];
+                    const content = cell.querySelector('.phase-month-content');
+                    if (!content) {
+                        i++;
+                        continue;
+                    }
+                    
+                    // 获取所有可见的状态块
+                    const statusBoxes = Array.from(content.querySelectorAll('.status-box')).filter(box => 
+                        box.style.display !== 'none'
+                    );
+                    
+                    // 只有当格子内只有一个可见状态块时才考虑跨栏合并
+                    if (statusBoxes.length === 1) {
+                        const statusBox = statusBoxes[0];
+                        const statusId = statusBox.dataset.status;
+                        const customColor = statusBox.dataset.customColor;
+                        let spanCount = 1;
+                        
+                        // 检查后续相邻格子
+                        for (let j = i + 1; j < monthCells.length; j++) {
+                            const nextCell = monthCells[j];
+                            const nextContent = nextCell.querySelector('.phase-month-content');
+                            if (!nextContent) break;
+                            
+                            const nextStatusBoxes = Array.from(nextContent.querySelectorAll('.status-box')).filter(box => 
+                                box.style.display !== 'none'
+                            );
+                            
+                            // 只有当下一个格子也只有一个可见状态块且颜色相同时才合并
+                            if (nextStatusBoxes.length === 1) {
+                                const nextStatusBox = nextStatusBoxes[0];
+                                if (nextStatusBox.dataset.status === statusId &&
+                                    nextStatusBox.dataset.customColor === customColor) {
+                                    spanCount++;
+                                    nextCell.dataset.merged = 'true';
+                                    nextCell.style.display = 'none';
+                                } else {
+                                    break;
+                                }
+                            } else {
+                                break;
+                            }
+                        }
+                        
+                        // 如果有跨栏合并，设置 grid-column
+                        if (spanCount > 1) {
+                            cell.dataset.mergeSpan = spanCount;
+                            cell.style.gridColumn = `span ${spanCount}`;
+                        }
+                        
+                        i += spanCount;
+                    } else {
+                        i++;
+                    }
+                }
+            });
+        }
+        
+        // 取消合併狀態
+        function unmergeStatuses() {
+            // 恢复项目行
+            document.querySelectorAll('.sub-item-row').forEach(row => {
+                row.querySelectorAll('.month-cell').forEach(cell => {
+                    // 恢復所有格子的顯示
+                    if (cell.dataset.merged === 'true') {
+                        cell.style.display = '';
+                        delete cell.dataset.merged;
+                    }
+                    // 移除合併樣式
+                    if (cell.dataset.mergeSpan) {
+                        cell.style.gridColumn = '';
+                        delete cell.dataset.mergeSpan;
+                    }
+                    // 恢复所有状态块的显示
+                    cell.querySelectorAll('.status-box').forEach(box => {
+                        box.style.display = '';
+                        if (box.dataset.mergedInColumn) {
+                            delete box.dataset.mergedInColumn;
+                        }
+                    });
+                });
+            });
+            
+            // 恢复阶段层
+            document.querySelectorAll('.phase-header').forEach(phaseHeader => {
+                phaseHeader.querySelectorAll('.phase-month-cell').forEach(cell => {
+                    // 恢復所有格子的顯示
+                    if (cell.dataset.merged === 'true') {
+                        cell.style.display = '';
+                        delete cell.dataset.merged;
+                    }
+                    // 移除合併樣式
+                    if (cell.dataset.mergeSpan) {
+                        cell.style.gridColumn = '';
+                        delete cell.dataset.mergeSpan;
+                    }
+                    // 恢复所有状态块的显示
+                    const content = cell.querySelector('.phase-month-content');
+                    if (content) {
+                        content.querySelectorAll('.status-box').forEach(box => {
+                            box.style.display = '';
+                            if (box.dataset.mergedInColumn) {
+                                delete box.dataset.mergedInColumn;
+                            }
+                        });
+                    }
+                });
+            });
+        }
+
+        // 編輯文字
+        function editText(element) {
+            if (isViewMode) return;
+            
+            // 獲取純文本內容（排除子元素內的文字）
+            let currentText = '';
+            let textNode = null;
+            for (let node of element.childNodes) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    const text = node.textContent.trim();
+                    if (text) {
+                        currentText = text;
+                        textNode = node;
+                        break;
+                    }
+                }
+            }
+            
+            // 如果沒有找到文本節點，創建一個
+            if (!textNode) {
+                textNode = document.createTextNode('');
+                element.insertBefore(textNode, element.firstChild);
+            }
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentText;
+            input.style.cssText = 'width: 100%; padding: 5px; font: inherit; background: white; border: 2px solid #667eea; border-radius: 4px;';
+            
+            const parent = element.parentElement;
+            const placeholder = document.createElement('div');
+            placeholder.appendChild(input);
+            element.style.display = 'none';
+            parent.insertBefore(placeholder, element);
+            
+            input.focus();
+            input.select();
+            
+            function saveEdit() {
+                const newText = input.value.trim();
+                if (newText) {
+                    // 更新文本節點的內容
+                    textNode.textContent = newText;
+                }
+                element.style.display = '';
+                placeholder.remove();
+                saveData();
+            }
+            
+            input.addEventListener('blur', saveEdit);
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') saveEdit();
+            });
+        }
+
+        // ==================== 階段管理功能 ====================
+        
+        // 新增階段
+        function addPhase() {
+            const phasesContainer = document.getElementById('phasesContainer');
+            const phaseNumber = phasesContainer.children.length + 1;
+            const phaseName = `第${phaseNumber}階段`;
+            
+            const phaseSection = createPhaseSection(phaseName, `phase-${Date.now()}`);
+            phasesContainer.appendChild(phaseSection);
+            
+            // 重新初始化所有拖放事件
+            initializeDragAndDrop();
+            
+            // 初始化新階段的拖拽功能
+            setupPhaseDrag(phaseSection);
+            
+            saveData();
+        }
+        
+        // 創建階段區塊
+        function createPhaseSection(phaseName, phaseId) {
+            const phaseSection = document.createElement('div');
+            phaseSection.className = 'phase-section';
+            phaseSection.dataset.phaseId = phaseId;
+            
+            const phaseMonthCount = 4; // 默认4个月份
+            phaseSection.style.setProperty('--phase-month-count', phaseMonthCount);
+            
+            const phaseHeader = document.createElement('div');
+            phaseHeader.className = 'phase-header';
+            
+            // 创建阶段信息区
+            const phaseInfo = document.createElement('div');
+            phaseInfo.className = 'phase-info';
+            phaseInfo.innerHTML = `
+                <div class="phase-title-row">
+                    <span class="phase-drag-handle" title="拖曳調整順序">⋮⋮</span>
+                    <span class="phase-title" ondblclick="editPhaseTitle(this, event)">${phaseName}</span>
+                    <span class="phase-toggle" onclick="togglePhase(this.closest('.phase-header'), event)">▼</span>
+                </div>
+                <div class="phase-controls">
+                    <button class="add-phase-month-btn" onclick="addPhaseMonth('${phaseId}', event)">➕ 月份</button>
+                    <button class="delete-phase-btn" onclick="deletePhase(this, event)">刪除階段</button>
+                </div>
+            `;
+            phaseHeader.appendChild(phaseInfo);
+            
+            // 创建默认月份格子
+            const defaultMonths = ['4月', '5月', '6月', '7月'];
+            defaultMonths.forEach(monthName => {
+                const monthCell = document.createElement('div');
+                monthCell.className = 'phase-month-cell month-cell';
+                monthCell.innerHTML = `
+                    <div class="phase-month-header">
+                        <span class="phase-month-label" ondblclick="editPhaseMonth(this)">
+                            ${monthName}
+                            <button class="month-delete-btn" onclick="deletePhaseMonth(this, event)">✕</button>
+                        </span>
+                    </div>
+                    <div class="phase-month-content"></div>
+                `;
+                phaseHeader.appendChild(monthCell);
+            });
+            
+            const phaseContent = document.createElement('div');
+            phaseContent.className = 'phase-content';
+            
+            // 創建三個分類
+            const categories = [
+                { name: 'UI/UX 設計', id: 'ui-ux', color: 'ui-ux' },
+                { name: '系統流程設計', id: 'system-flow', color: 'system-flow' },
+                { name: '系統功能與技術規格', id: 'tech-spec', color: 'tech-spec' }
+            ];
+            
+            categories.forEach(cat => {
+                const catSection = createCategorySection(cat.name, cat.id, cat.color, phaseId);
+                phaseContent.appendChild(catSection);
+            });
+            
+            phaseSection.appendChild(phaseHeader);
+            phaseSection.appendChild(phaseContent);
+            
+            return phaseSection;
+        }
+        
+        // 創建分類區塊
+        function createCategorySection(catName, catId, colorClass, phaseId) {
+            const catSection = document.createElement('div');
+            catSection.className = 'category-section';
+            catSection.dataset.category = `${phaseId}-${catId}`;
+            catSection.dataset.phaseId = phaseId;
+            
+            const catHeader = document.createElement('div');
+            catHeader.className = `category-header ${colorClass}`;
+            catHeader.innerHTML = `
+                ${catName}
+                <button class="add-item-btn" onclick="addProject('${phaseId}-${catId}')">➕ 新增項目</button>
+            `;
+            
+            const container = document.createElement('div');
+            container.className = 'timeline-container';
+            
+            // 創建時程表頭
+            const header = document.createElement('div');
+            header.className = `timeline-header ${colorClass}`;
+            header.innerHTML = `
+                <div>
+                    項目名稱
+                    <button class="add-month-btn" onclick="addMonth('${phaseId}-${catId}')">➕ 月份</button>
+                </div>
+            `;
+            
+            // 添加默認的4個月份
+            ['4月', '5月', '6月', '7月'].forEach(monthName => {
+                const monthHeader = document.createElement('div');
+                monthHeader.className = 'month-header';
+                monthHeader.setAttribute('ondblclick', 'editMonth(this)');
+                monthHeader.innerHTML = `${monthName}<button class="month-delete-btn" onclick="deleteMonth(this, event)">✕</button>`;
+                header.appendChild(monthHeader);
+            });
+            
+            container.appendChild(header);
+            catSection.appendChild(catHeader);
+            catSection.appendChild(container);
+            
+            // 更新月份數量
+            catSection.style.setProperty('--month-count', 4);
+            
+            return catSection;
+        }
+        
+        // 收合/展開階段
+        function togglePhase(headerElement, event) {
+            if (event) event.stopPropagation();
+            const phaseSection = headerElement.closest('.phase-section');
+            phaseSection.classList.toggle('collapsed');
+        }
+        
+        // ==================== 階段拖拽排序功能 ====================
+        let draggedPhase = null;
+        
+        // 初始化階段拖拽功能
+        function initializePhaseDragAndDrop() {
+            document.querySelectorAll('.phase-section').forEach(phaseSection => {
+                setupPhaseDrag(phaseSection);
+            });
+        }
+        
+        // 為單個階段設置拖拽
+        function setupPhaseDrag(phaseSection) {
+            const dragHandle = phaseSection.querySelector('.phase-drag-handle');
+            if (!dragHandle) return;
+            
+            // 只在拖拽手柄上設置 draggable
+            dragHandle.setAttribute('draggable', 'true');
+            
+            // 拖拽開始（在拖拽手柄上監聽）
+            dragHandle.addEventListener('dragstart', function(e) {
+                draggedPhase = phaseSection;
+                phaseSection.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', phaseSection.innerHTML);
+            });
+            
+            // 拖拽結束（在拖拽手柄上監聽）
+            dragHandle.addEventListener('dragend', function(e) {
+                phaseSection.classList.remove('dragging');
+                
+                // 清除所有拖拽提示
+                document.querySelectorAll('.phase-section').forEach(section => {
+                    section.classList.remove('drag-over-top', 'drag-over-bottom');
+                });
+                
+                draggedPhase = null;
+                saveData();
+            });
+            
+            // 拖拽經過
+            phaseSection.addEventListener('dragover', function(e) {
+                if (!draggedPhase || draggedPhase === phaseSection) return;
+                
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                
+                // 計算鼠標在元素的位置
+                const rect = phaseSection.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                
+                // 清除當前元素的所有拖拽樣式
+                phaseSection.classList.remove('drag-over-top', 'drag-over-bottom');
+                
+                // 根據鼠標位置添加樣式
+                if (e.clientY < midpoint) {
+                    phaseSection.classList.add('drag-over-top');
+                } else {
+                    phaseSection.classList.add('drag-over-bottom');
+                }
+            });
+            
+            // 離開拖拽區域
+            phaseSection.addEventListener('dragleave', function(e) {
+                phaseSection.classList.remove('drag-over-top', 'drag-over-bottom');
+            });
+            
+            // 放置
+            phaseSection.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (!draggedPhase || draggedPhase === phaseSection) return;
+                
+                const rect = phaseSection.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                
+                const container = phaseSection.parentNode;
+                
+                // 根據鼠標位置決定插入前還是插入後
+                if (e.clientY < midpoint) {
+                    container.insertBefore(draggedPhase, phaseSection);
+                } else {
+                    container.insertBefore(draggedPhase, phaseSection.nextSibling);
+                }
+                
+                phaseSection.classList.remove('drag-over-top', 'drag-over-bottom');
+            });
+        }
+        
+        // 刪除階段
+        function deletePhase(btn, event) {
+            event.stopPropagation();
+            if (confirm('確定要刪除此階段及其所有內容嗎？')) {
+                const phaseSection = btn.closest('.phase-section');
+                phaseSection.remove();
+                saveData();
+            }
+        }
+        
+        // 編輯階段標題
+        function editPhaseTitle(titleElement, event) {
+            event.stopPropagation();
+            if (isViewMode) return;
+            
+            const currentText = titleElement.textContent.trim();
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentText;
+            input.style.cssText = 'font-size: 18px; font-weight: bold; padding: 5px; width: 300px; color: white; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.5); border-radius: 4px;';
+            
+            input.onblur = function() {
+                titleElement.textContent = this.value || currentText;
+                saveData();
+            };
+            
+            input.onkeydown = function(e) {
+                if (e.key === 'Enter') this.blur();
+                if (e.key === 'Escape') {
+                    titleElement.textContent = currentText;
+                }
+            };
+            
+            titleElement.textContent = '';
+            titleElement.appendChild(input);
+            input.focus();
+            input.select();
+        }
+        
+        // 编辑阶段层月份
+        function editPhaseMonth(labelElement) {
+            if (isViewMode) return;
+            
+            const currentText = labelElement.childNodes[0].textContent.trim();
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentText;
+            input.style.cssText = 'font-size: 12px; padding: 2px 4px; width: 50px; text-align: center; color: white; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); border-radius: 3px;';
+            
+            input.onblur = function() {
+                const newText = this.value.trim() || currentText;
+                const deleteBtn = labelElement.querySelector('.month-delete-btn');
+                labelElement.innerHTML = `${newText}`;
+                labelElement.appendChild(deleteBtn);
+                saveData();
+            };
+            
+            input.onkeydown = function(e) {
+                if (e.key === 'Enter') this.blur();
+                if (e.key === 'Escape') {
+                    const deleteBtn = labelElement.querySelector('.month-delete-btn');
+                    labelElement.innerHTML = currentText;
+                    labelElement.appendChild(deleteBtn);
+                }
+            };
+            
+            const deleteBtn = labelElement.querySelector('.month-delete-btn');
+            labelElement.innerHTML = '';
+            labelElement.appendChild(input);
+            labelElement.appendChild(deleteBtn);
+            input.focus();
+            input.select();
+        }
+        
+        // 删除阶段层月份
+        function deletePhaseMonth(btn, event) {
+            event.stopPropagation();
+            if (!confirm('確定要刪除此月份嗎？')) return;
+            
+            const monthCell = btn.closest('.phase-month-cell');
+            const phaseHeader = monthCell.closest('.phase-header');
+            const phaseSection = phaseHeader.closest('.phase-section');
+            const phaseId = phaseSection.dataset.phaseId;
+            
+            // 获取当前月份索引
+            const cells = Array.from(phaseHeader.querySelectorAll('.phase-month-cell'));
+            const monthIndex = cells.indexOf(monthCell);
+            
+            // 删除阶段层的月份格子
+            monthCell.remove();
+            
+            // 更新 CSS 变量
+            const currentCount = phaseHeader.querySelectorAll('.phase-month-cell').length;
+            phaseSection.style.setProperty('--phase-month-count', currentCount);
+            
+            // 删除每个分类中对应列的月份
+            phaseSection.querySelectorAll('.category-section').forEach(catSection => {
+                // 删除表头对应的月份
+                const monthHeaders = catSection.querySelectorAll('.month-header');
+                if (monthHeaders[monthIndex]) {
+                    monthHeaders[monthIndex].remove();
+                }
+                
+                // 删除每个子项目对应的月份格子
+                catSection.querySelectorAll('.sub-item-row').forEach(subRow => {
+                    const monthCells = subRow.querySelectorAll('.month-cell');
+                    if (monthCells[monthIndex]) {
+                        monthCells[monthIndex].remove();
+                    }
+                });
+                
+                // 更新分类的月份数量
+                const newCount = catSection.querySelectorAll('.month-header').length;
+                catSection.style.setProperty('--month-count', newCount);
+            });
+            
+            saveData();
+        }
+        
+        // 新增阶段层月份
+        function addPhaseMonth(phaseId, event) {
+            event.stopPropagation();
+            
+            const phaseSection = document.querySelector(`[data-phase-id="${phaseId}"]`);
+            const phaseHeader = phaseSection.querySelector('.phase-header');
+            const currentMonthCount = phaseHeader.querySelectorAll('.phase-month-cell').length;
+            
+            if (currentMonthCount >= 12) {
+                alert('最多只能添加12個月份欄位');
+                return;
+            }
+            
+            // 計算下一個月份 (從4月開始，循環 1-12)
+            // 默認4個月是 4,5,6,7，所以 currentMonthCount=4 時，nextMonth 應該是 8
+            const nextMonth = ((currentMonthCount + 4 - 1) % 12) + 1;
+            const monthName = prompt('請輸入月份名稱：', `${nextMonth}月`);
+            if (!monthName) return;
+            
+            // 创建新月份格子
+            const monthCell = document.createElement('div');
+            monthCell.className = 'phase-month-cell month-cell';
+            monthCell.innerHTML = `
+                <div class="phase-month-header">
+                    <span class="phase-month-label" ondblclick="editPhaseMonth(this)">
+                        ${monthName}
+                        <button class="month-delete-btn" onclick="deletePhaseMonth(this, event)">✕</button>
+                    </span>
+                </div>
+                <div class="phase-month-content"></div>
+            `;
+            phaseHeader.appendChild(monthCell);
+            
+            // 為新添加的 phase-month-content 初始化拖拽
+            const newPhaseMonthContent = monthCell.querySelector('.phase-month-content');
+            initializeCellDragAndDrop(newPhaseMonthContent);
+            
+            // 更新 CSS 变量
+            const newCount = phaseHeader.querySelectorAll('.phase-month-cell').length;
+            phaseSection.style.setProperty('--phase-month-count', newCount);
+            
+            // 在每个分类中添加对应的月份
+            phaseSection.querySelectorAll('.category-section').forEach(catSection => {
+                // 在表头添加月份
+                const header = catSection.querySelector('.timeline-header');
+                const monthHeader = document.createElement('div');
+                monthHeader.className = 'month-header';
+                monthHeader.setAttribute('ondblclick', 'editMonth(this)');
+                monthHeader.innerHTML = `${monthName}<button class="month-delete-btn" onclick="deleteMonth(this, event)">✕</button>`;
+                header.appendChild(monthHeader);
+                
+                // 在每个子项目添加月份格子
+                catSection.querySelectorAll('.sub-item-row').forEach(subRow => {
+                    const newMonthCell = document.createElement('div');
+                    newMonthCell.className = 'month-cell';
+                    subRow.appendChild(newMonthCell);
+                    
+                    // 為新添加的 month-cell 初始化拖拽
+                    initializeCellDragAndDrop(newMonthCell);
+                });
+                
+                // 更新分类的月份数量
+                const newCount = catSection.querySelectorAll('.month-header').length;
+                catSection.style.setProperty('--month-count', newCount);
+            });
+            
+            saveData();
+        }
+
+        // ==================== 項目管理功能 ====================
+
+        // 生成唯一ID（用於與 Notion database 連接）
+        function generateUniqueId() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        let currentCategoryForProject = null;
+
+        // 新增項目 - 打開模態框
+        function addProject(category) {
+            currentCategoryForProject = category;
+            document.getElementById('projectName').value = '';
+            document.getElementById('projectDesc').value = '';
+            document.getElementById('addProjectModal').classList.add('show');
+        }
+        
+        // 關閉新增項目模態框
+        function closeAddProjectModal() {
+            document.getElementById('addProjectModal').classList.remove('show');
+            currentCategoryForProject = null;
+        }
+        
+        // 確認新增項目
+        function confirmAddProject() {
+            const name = document.getElementById('projectName').value.trim();
+            if (!name) {
+                alert('請輸入項目名稱');
+                return;
+            }
+            
+            const desc = document.getElementById('projectDesc').value.trim() || '';
+            const category = currentCategoryForProject;
+            
+            const categorySection = document.querySelector(`[data-category="${category}"]`);
+            if (!categorySection) {
+                alert('找不到對應的分類區塊');
+                return;
+            }
+            
+            const container = categorySection.querySelector('.timeline-container');
+            const header = categorySection.querySelector('.timeline-header');
+            const monthCount = header.querySelectorAll('.month-header').length;
+            
+            const projectItem = document.createElement('div');
+            projectItem.className = 'project-item';
+            
+            // 創建第一個 sub-item-row（作為項目標題）
+            const subItem = document.createElement('div');
+            subItem.className = 'sub-item-row';
+            
+            const subItemInfo = document.createElement('div');
+            subItemInfo.className = 'sub-item-info';
+            subItemInfo.dataset.uniqueId = generateUniqueId(); // 生成唯一ID
+            subItemInfo.innerHTML = `
+                <div class="sub-title" ondblclick="editText(this)">
+                    <span class="star-icon" onclick="toggleStar(this, event)" title="標記為重要">☆</span>
+                    ${name}
+                    <span class="edit-icon" onclick="editText(this.parentElement)">✏️</span>
+                    <button class="detail-desc-btn" onclick="openDetailDesc(this)" title="添加詳細說明">📋</button>
+                    <button class="delete-item-btn" onclick="deleteProject(this)">🗑️</button>
+                </div>
+                <div class="sub-desc" ondblclick="editText(this)">${desc || '點擊編輯說明'}</div>
+                <div class="time-badges">
+                    <span class="add-badge-btn" onclick="addBadge(this)">+ 時間標籤</span>
+                </div>
+            `;
+            subItem.appendChild(subItemInfo);
+            
+            // 根據月份數量添加月份格子
+            for (let i = 0; i < monthCount; i++) {
+                const monthCell = document.createElement('div');
+                monthCell.className = 'month-cell';
+                subItem.appendChild(monthCell);
+            }
+            
+            projectItem.appendChild(subItem);
+            
+            // 添加子項目按鈕
+            const addSubBtn = document.createElement('button');
+            addSubBtn.className = 'add-item-btn';
+            addSubBtn.onclick = function() { addSubItem(this); };
+            addSubBtn.textContent = '➕ 新增子項目';
+            projectItem.appendChild(addSubBtn);
+            
+            container.appendChild(projectItem);
+            
+            // 初始化拖放功能
+            const newCells = subItem.querySelectorAll('.month-cell');
+            newCells.forEach(cell => {
+                initializeCellDragAndDrop(cell);
+            });
+            
+            saveData();
+            closeAddProjectModal();
+        }
+
+        // 新增子項目
+        let currentSubItemButton = null;
+        
+        function addSubItem(btn) {
+            currentSubItemButton = btn;
+            document.getElementById('subItemName').value = '';
+            document.getElementById('subItemDesc').value = '';
+            document.getElementById('addSubItemModal').classList.add('show');
+        }
+        
+        // 關閉新增子項目模態框
+        function closeAddSubItemModal() {
+            document.getElementById('addSubItemModal').classList.remove('show');
+            currentSubItemButton = null;
+        }
+        
+        // 確認新增子項目
+        function confirmAddSubItem() {
+            const name = document.getElementById('subItemName').value.trim();
+            if (!name) {
+                alert('請輸入子項目名稱');
+                return;
+            }
+            
+            const desc = document.getElementById('subItemDesc').value.trim() || '';
+            const btn = currentSubItemButton;
+            
+            if (!btn) {
+                alert('發生錯誤，請重試');
+                return;
+            }
+            
+            const projectItem = btn.closest('.project-item');
+            const section = projectItem.closest('.category-section');
+            const header = section.querySelector('.timeline-header');
+            const monthCount = header.querySelectorAll('.month-header').length;
+            
+            const subItem = document.createElement('div');
+            subItem.className = 'sub-item-row';
+            
+            // 創建子項目資訊格
+            const subItemInfo = document.createElement('div');
+            subItemInfo.className = 'sub-item-info';
+            subItemInfo.dataset.uniqueId = generateUniqueId(); // 生成唯一ID
+            subItemInfo.innerHTML = `
+                <div class="sub-title" ondblclick="editText(this)">
+                    <span class="star-icon" onclick="toggleStar(this, event)" title="標記為重要">☆</span>
+                    ${name}
+                    <span class="edit-icon" onclick="editText(this.parentElement)">✏️</span>
+                    <button class="detail-desc-btn" onclick="openDetailDesc(this)" title="添加詳細說明">📋</button>
+                    <button class="delete-item-btn" onclick="deleteSubItem(this)">🗑️</button>
+                </div>
+                <div class="sub-desc" ondblclick="editText(this)">${desc || '點擊編輯說明'}</div>
+                <div class="time-badges">
+                    <span class="add-badge-btn" onclick="addBadge(this)">+ 時間標籤</span>
+                </div>
+            `;
+            subItem.appendChild(subItemInfo);
+            
+            // 根據月份數量添加月份格子
+            for (let i = 0; i < monthCount; i++) {
+                const monthCell = document.createElement('div');
+                monthCell.className = 'month-cell';
+                subItem.appendChild(monthCell);
+            }
+            
+            projectItem.insertBefore(subItem, btn);
+            
+            // 重新初始化拖放功能
+            const newCells = subItem.querySelectorAll('.month-cell');
+            newCells.forEach(cell => {
+                initializeCellDragAndDrop(cell);
+            });
+            
+            saveData();
+            closeAddSubItemModal();
+        }
+
+        // 刪除項目
+        function deleteProject(btn) {
+            if (!confirm('確定要刪除此項目嗎？')) return;
+            btn.closest('.project-item').remove();
+            saveData();
+        }
+
+        // 刪除子項目
+        function deleteSubItem(btn) {
+            if (!confirm('確定要刪除此子項目嗎？')) return;
+            btn.closest('.sub-item-row').remove();
+            saveData();
+        }
+
+        // 切換星標狀態
+        function toggleStar(starIcon, event) {
+            event.stopPropagation(); // 防止觸發雙擊編輯
+            
+            if (isViewMode) return; // 瀏覽模式下不可切換
+            
+            if (starIcon.classList.contains('starred')) {
+                // 移除星標
+                starIcon.classList.remove('starred');
+                starIcon.textContent = '☆';
+                starIcon.title = '標記為重要';
+            } else {
+                // 添加星標
+                starIcon.classList.add('starred');
+                starIcon.textContent = '★';
+                starIcon.title = '取消標記';
+            }
+            
+            saveData();
+        }
+
+        // 新增時間標籤
+        function addBadge(btn) {
+            if (isViewMode) return;
+            
+            editingBadge = null;
+            targetBadgeContainer = btn.parentElement;
+            document.getElementById('badgeText').value = '';
+            document.getElementById('badgeModal').classList.add('show');
+            
+            // 重置類型選擇
+            selectedBadgeType = 'time';
+            document.querySelectorAll('input[name="badgeType"]').forEach(radio => {
+                radio.checked = radio.value === 'time';
+                radio.onchange = function() {
+                    selectedBadgeType = this.value;
+                };
+            });
+            
+            // 顏色選擇
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.classList.remove('selected');
+                option.onclick = function() {
+                    document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedColor = this.dataset.color;
+                };
+            });
+        }
+
+        // 編輯時間標籤
+        function editBadge(badge) {
+            if (isViewMode) return;
+            
+            editingBadge = badge;
+            targetBadgeContainer = badge.parentElement;
+            
+            // 獲取純文本（去除圖標）
+            let text = badge.childNodes[0].textContent.trim();
+            // 移除圖標（如果存在）
+            Object.values(badgeTypeIcons).forEach(icon => {
+                text = text.replace(icon, '').trim();
+            });
+            
+            document.getElementById('badgeText').value = text;
+            document.getElementById('badgeModal').classList.add('show');
+            
+            selectedColor = badge.dataset.color || 'purple';
+            selectedBadgeType = badge.dataset.type || 'time';
+            
+            // 類型選擇
+            document.querySelectorAll('input[name="badgeType"]').forEach(radio => {
+                radio.checked = radio.value === selectedBadgeType;
+                radio.onchange = function() {
+                    selectedBadgeType = this.value;
+                };
+            });
+            
+            // 顏色選擇
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.classList.remove('selected');
+                if (option.dataset.color === selectedColor) {
+                    option.classList.add('selected');
+                }
+                option.onclick = function() {
+                    document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedColor = this.dataset.color;
+                };
+            });
+        }
+
+        // 儲存時間標籤
+        function saveBadge() {
+            const text = document.getElementById('badgeText').value.trim();
+            if (!text) {
+                alert('請輸入標籤文字');
+                return;
+            }
+            
+            // 獲取選中的類型
+            const typeRadio = document.querySelector('input[name="badgeType"]:checked');
+            const badgeType = typeRadio ? typeRadio.value : 'time';
+            const icon = badgeTypeIcons[badgeType];
+            
+            if (editingBadge) {
+                // 編輯現有標籤
+                editingBadge.childNodes[0].textContent = `${icon} ${text}`;
+                editingBadge.className = `time-badge ${selectedColor}`;
+                editingBadge.dataset.color = selectedColor;
+                editingBadge.dataset.type = badgeType;
+            } else {
+                // 新增標籤
+                const badge = document.createElement('span');
+                badge.className = `time-badge ${selectedColor}`;
+                badge.dataset.color = selectedColor;
+                badge.dataset.type = badgeType;
+                badge.setAttribute('ondblclick', 'editBadge(this)');
+                badge.innerHTML = `
+                    ${icon} ${text}
+                    <span class="delete-badge" onclick="deleteBadge(this, event)">×</span>
+                `;
+                
+                const addBtn = targetBadgeContainer.querySelector('.add-badge-btn');
+                targetBadgeContainer.insertBefore(badge, addBtn);
+            }
+            
+            closeBadgeModal();
+            saveData();
+        }
+
+        // 刪除時間標籤
+        function deleteBadge(btn, event) {
+            event.stopPropagation();
+            if (!confirm('確定要刪除此標籤嗎？')) return;
+            btn.closest('.time-badge').remove();
+            saveData();
+        }
+
+        // 關閉模態框
+        function closeBadgeModal() {
+            document.getElementById('badgeModal').classList.remove('show');
+            editingBadge = null;
+            targetBadgeContainer = null;
+        }
+
+        // ==================== 詳細說明功能 ====================
+        
+        // 打開詳細說明模態框
+        function openDetailDesc(btn) {
+            if (isViewMode) return;
+            
+            const subItemInfo = btn.closest('.sub-item-info');
+            const titleElement = subItemInfo.querySelector('.sub-title');
+            
+            // 獲取項目名稱（去除星標和按鈕）
+            let itemName = '';
+            titleElement.childNodes.forEach(node => {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    itemName += node.textContent.trim();
+                }
+            });
+            
+            // 設置當前編輯元素
+            currentDetailDescElement = subItemInfo;
+            
+            // 顯示項目名稱
+            document.getElementById('detailDescItemName').textContent = itemName;
+            
+            // 載入現有的詳細說明
+            const existingDesc = subItemInfo.dataset.detailedDesc || '';
+            document.getElementById('detailDescText').value = existingDesc;
+            
+            // 更新字數統計
+            updateCharCount();
+            
+            // 顯示模態框
+            document.getElementById('detailDescModal').classList.add('show');
+            
+            // 監聽文本框變化以更新字數
+            const textarea = document.getElementById('detailDescText');
+            textarea.oninput = updateCharCount;
+        }
+        
+        // 更新字數統計
+        function updateCharCount() {
+            const textarea = document.getElementById('detailDescText');
+            const charCount = textarea.value.length;
+            document.getElementById('charCount').textContent = charCount;
+        }
+        
+        // 保存詳細說明
+        function saveDetailDesc() {
+            const detailDesc = document.getElementById('detailDescText').value.trim();
+            
+            if (currentDetailDescElement) {
+                // 保存到 dataset
+                currentDetailDescElement.dataset.detailedDesc = detailDesc;
+                
+                // 更新詳細說明按鈕樣式
+                const detailBtn = currentDetailDescElement.querySelector('.detail-desc-btn');
+                if (detailBtn) {
+                    if (detailDesc) {
+                        detailBtn.classList.add('has-content');
+                        detailBtn.title = '已有詳細說明（點擊查看）';
+                    } else {
+                        detailBtn.classList.remove('has-content');
+                        detailBtn.title = '添加詳細說明';
+                    }
+                }
+            }
+            
+            closeDetailDescModal();
+            saveData();
+        }
+        
+        // 關閉詳細說明模態框
+        function closeDetailDescModal() {
+            document.getElementById('detailDescModal').classList.remove('show');
+            currentDetailDescElement = null;
+            document.getElementById('detailDescText').value = '';
+            document.getElementById('charCount').textContent = '0';
+        }
+
+        // 動態月份管理
+        function updateMonthCount(category) {
+            const section = document.querySelector(`.category-section[data-category="${category}"]`);
+            const header = section.querySelector('.timeline-header');
+            const monthCount = header.querySelectorAll('.month-header').length;
+            
+            // 更新 CSS 變數
+            section.style.setProperty('--month-count', monthCount);
+            
+            return monthCount;
+        }
+
+        // 編輯月份名稱
+        function editMonth(element) {
+            if (isViewMode) return;
+            
+            const deleteBtn = element.querySelector('.month-delete-btn');
+            const currentText = element.childNodes[0].textContent.trim();
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentText;
+            input.style.cssText = 'width: 90%; padding: 5px; font: inherit; background: white; border: 2px solid #667eea; border-radius: 4px; text-align: center;';
+            
+            element.innerHTML = '';
+            element.appendChild(input);
+            
+            input.focus();
+            input.select();
+            
+            function saveEdit() {
+                const newText = input.value.trim() || currentText;
+                element.innerHTML = `${newText}<button class="month-delete-btn" onclick="deleteMonth(this, event)">✕</button>`;
+                saveData();
+            }
+            
+            input.addEventListener('blur', saveEdit);
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') saveEdit();
+            });
+        }
+
+        // 新增月份
+        function addMonth(category) {
+            const section = document.querySelector(`.category-section[data-category="${category}"]`);
+            const header = section.querySelector('.timeline-header');
+            const currentMonthCount = header.querySelectorAll('.month-header').length;
+            
+            if (currentMonthCount >= 12) {
+                alert('最多只能添加12個月份欄位');
+                return;
+            }
+            
+            // 計算下一個月份 (循環 1-12)
+            const nextMonth = ((currentMonthCount + 3) % 12) + 1;
+            const monthName = prompt('請輸入月份名稱：', `${nextMonth}月`);
+            if (!monthName) return;
+            
+            // 添加月份標題
+            const monthHeader = document.createElement('div');
+            monthHeader.className = 'month-header';
+            monthHeader.setAttribute('ondblclick', 'editMonth(this)');
+            monthHeader.innerHTML = `${monthName}<button class="month-delete-btn" onclick="deleteMonth(this, event)">✕</button>`;
+            header.appendChild(monthHeader);
+            
+            // 為所有子項目添加對應的格子
+            section.querySelectorAll('.sub-item-row').forEach(subRow => {
+                const monthCell = document.createElement('div');
+                monthCell.className = 'month-cell';
+                subRow.appendChild(monthCell);
+                
+                // 為新添加的 month-cell 初始化拖拽
+                initializeCellDragAndDrop(monthCell);
+            });
+            
+            updateMonthCount(category);
+            saveData();
+        }
+
+        // 刪除月份
+        function deleteMonth(btn, event) {
+            event.stopPropagation();
+            
+            const monthHeader = btn.parentElement;
+            const header = monthHeader.parentElement;
+            const currentMonthCount = header.querySelectorAll('.month-header').length;
+            
+            if (currentMonthCount <= 1) {
+                alert('至少需要保留一個月份欄位');
+                return;
+            }
+            
+            if (!confirm('確定要刪除此月份欄位嗎？該月份所有資料將被清除。')) return;
+            
+            // 獲取月份索引（扣除第一個"項目名稱"欄位）
+            const monthIndex = Array.from(header.children).indexOf(monthHeader) - 1;
+            
+            // 從標題刪除
+            monthHeader.remove();
+            
+            // 從所有子項目刪除對應格子
+            const section = header.closest('.category-section');
+            const category = section.dataset.category;
+            
+            section.querySelectorAll('.sub-item-row').forEach(subRow => {
+                const monthCells = Array.from(subRow.querySelectorAll('.month-cell'));
+                
+                // 刪除對應索引的格子
+                if (monthCells[monthIndex]) {
+                    monthCells[monthIndex].remove();
+                }
+            });
+            
+            updateMonthCount(category);
+            saveData();
+        }
+
+        // 自訂狀態管理
+        let customStatuses = JSON.parse(localStorage.getItem('customStatuses') || '[]');
+
+        // 載入自訂狀態
+        function loadCustomStatuses() {
+            const statusBlocks = document.getElementById('statusBlocks');
+            // 清空现有的自定义状态块（避免重复）
+            const existingCustomBlocks = statusBlocks.querySelectorAll('.status-block[data-status^="custom-"]');
+            existingCustomBlocks.forEach(block => block.remove());
+            
+            // 添加自定义状态
+            customStatuses.forEach(status => {
+                addStatusBlock(status.name, status.color, status.id);
+            });
+        }
+
+        // 顯示新增狀態模態框
+        function showAddStatusModal() {
+            document.getElementById('addStatusModal').classList.add('show');
+            document.getElementById('newStatusName').value = '';
+            document.getElementById('newStatusColor').value = '#9c27b0';
+            
+            // 為常見色添加點擊事件
+            document.querySelectorAll('.color-preset').forEach(preset => {
+                preset.onclick = function() {
+                    const color = this.dataset.color;
+                    document.getElementById('newStatusColor').value = color;
+                    // 更新選中狀態
+                    document.querySelectorAll('.color-preset').forEach(p => p.style.border = '2px solid transparent');
+                    this.style.border = '2px solid #667eea';
+                };
+            });
+        }
+
+        // 關閉新增狀態模態框
+        function closeAddStatusModal() {
+            document.getElementById('addStatusModal').classList.remove('show');
+        }
+
+        // 新增自訂狀態
+        function addCustomStatus() {
+            const name = document.getElementById('newStatusName').value.trim();
+            const color = document.getElementById('newStatusColor').value;
+            
+            if (!name) {
+                alert('請輸入狀態名稱');
+                return;
+            }
+            
+            const statusId = 'custom-' + Date.now();
+            const status = { id: statusId, name, color };
+            customStatuses.push(status);
+            localStorage.setItem('customStatuses', JSON.stringify(customStatuses));
+            
+            addStatusBlock(name, color, statusId);
+            closeAddStatusModal();
+        }
+
+        // 添加狀態區塊到工具箱
+        function addStatusBlock(name, color, statusId) {
+            const statusBlocks = document.getElementById('statusBlocks');
+            const block = document.createElement('div');
+            block.className = 'status-block';
+            block.draggable = true;
+            block.setAttribute('data-status', statusId);
+            block.style.background = `linear-gradient(135deg, ${color} 0%, ${adjustColor(color, -20)} 100%)`;
+            block.innerHTML = `
+                ${name}
+                <button class="status-block-delete" onclick="deleteCustomStatus('${statusId}', event)">✕</button>
+            `;
+            
+            // 初始化拖放事件
+            block.addEventListener('dragstart', (e) => {
+                e.target.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'copy';
+                e.dataTransfer.setData('text/plain', name);
+                e.dataTransfer.setData('status', statusId);
+                e.dataTransfer.setData('color', color);
+            });
+            
+            block.addEventListener('dragend', (e) => {
+                e.target.classList.remove('dragging');
+            });
+            
+            statusBlocks.appendChild(block);
+        }
+
+        // 調整顏色亮度
+        function adjustColor(color, percent) {
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = (num >> 16) + amt;
+            const G = (num >> 8 & 0x00FF) + amt;
+            const B = (num & 0x0000FF) + amt;
+            return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                (B < 255 ? B < 1 ? 0 : B : 255))
+                .toString(16).slice(1);
+        }
+
+        // 刪除自訂狀態
+        function deleteCustomStatus(statusId, event) {
+            event.stopPropagation();
+            
+            if (!confirm('確定要刪除此狀態嗎？已放置的狀態方塊不會被刪除。')) return;
+            
+            // 從陣列中移除
+            customStatuses = customStatuses.filter(s => s.id !== statusId);
+            localStorage.setItem('customStatuses', JSON.stringify(customStatuses));
+            
+            // 從DOM中移除
+            const block = document.querySelector(`.status-block[data-status="${statusId}"]`);
+            if (block && block.parentElement.id === 'statusBlocks') {
+                block.remove();
+            }
+        }
+
+        // 自動存檔功能
+        function saveData() {
+            const data = {
+                phases: []
+            };
+            
+            // 遍歷每個階段
+            document.querySelectorAll('.phase-section').forEach(phaseSection => {
+                const phaseId = phaseSection.dataset.phaseId;
+                const phaseTitle = phaseSection.querySelector('.phase-title')?.textContent.trim() || '未命名階段';
+                const isCollapsed = phaseSection.classList.contains('collapsed');
+                
+                // 保存阶段层的月份数据
+                const phaseMonths = [];
+                const phaseMonthNames = [];
+                phaseSection.querySelectorAll('.phase-month-cell').forEach(monthCell => {
+                    // 保存月份名称
+                    const monthLabel = monthCell.querySelector('.phase-month-label');
+                    const monthName = monthLabel ? monthLabel.childNodes[0].textContent.trim() : '';
+                    phaseMonthNames.push(monthName);
+                    
+                    // 保存该月份的状态方块
+                    const monthData = {
+                        statuses: []
+                    };
+                    const monthContent = monthCell.querySelector('.phase-month-content');
+                    if (monthContent) {
+                        monthContent.querySelectorAll('.status-box').forEach(statusBox => {
+                            const statusText = statusBox.childNodes[0].textContent.trim();
+                            monthData.statuses.push({
+                                text: statusText,
+                                status: statusBox.dataset.status || statusBox.className.split(' ')[1],
+                                customColor: statusBox.dataset.customColor || '',
+                                style: statusBox.getAttribute('style') || ''
+                            });
+                        });
+                    }
+                    phaseMonths.push(monthData);
+                });
+                
+                const categories = [];
+                
+                // 遍歷該階段內的每個類別
+                phaseSection.querySelectorAll('.category-section').forEach(section => {
+                    const category = section.dataset.category;
+                    const projects = [];
+                    
+                    // 保存月份標題
+                    const monthHeaders = [];
+                    const headerElement = section.querySelector('.timeline-header');
+                    if (headerElement) {
+                        headerElement.querySelectorAll('.month-header').forEach(header => {
+                            monthHeaders.push(header.childNodes[0].textContent.trim());
+                        });
+                    }
+                    
+                    // 遍歷每個專案
+                    section.querySelectorAll('.project-item').forEach(projectItem => {
+                        const subItems = [];
+                        
+                        // 遍歷每個子項目（包括第一個作為項目標題的 sub-item-row）
+                        projectItem.querySelectorAll('.sub-item-row').forEach(subRow => {
+                            const subTitleElement = subRow.querySelector('.sub-item-info .sub-title');
+                            const subDescElement = subRow.querySelector('.sub-item-info .sub-desc');
+                            
+                            // 獲取星標狀態
+                            const starIcon = subTitleElement ? subTitleElement.querySelector('.star-icon') : null;
+                            const isStarred = starIcon ? starIcon.classList.contains('starred') : false;
+                            
+                            // 獲取項目名稱（跳過星標圖標的文字）
+                            let subItemName = '';
+                            if (subTitleElement) {
+                                // 獲取所有文本節點，排除星標、編輯按鈕和刪除按鈕
+                                const textNodes = Array.from(subTitleElement.childNodes).filter(node => 
+                                    node.nodeType === Node.TEXT_NODE
+                                ).map(node => node.textContent.trim()).filter(text => text.length > 0);
+                                subItemName = textNodes.join(' ');
+                            }
+                            
+                            const subItemDesc = subDescElement ? subDescElement.textContent.trim() : '';
+                            
+                            // 獲取詳細說明
+                            const subItemInfo = subRow.querySelector('.sub-item-info');
+                            const detailedDesc = subItemInfo ? (subItemInfo.dataset.detailedDesc || '') : '';
+                            
+                            // 獲取唯一ID
+                            const uniqueId = subItemInfo ? (subItemInfo.dataset.uniqueId || '') : '';
+                            
+                            // 保存時間標籤（在 time-badges 容器中）
+                            const timeBadges = [];
+                            const timeBadgesContainer = subRow.querySelector('.sub-item-info .time-badges');
+                            if (timeBadgesContainer) {
+                                timeBadgesContainer.querySelectorAll('.time-badge').forEach(badge => {
+                                    // 獲取純文本（包含圖標）
+                                    const badgeText = badge.childNodes[0].textContent.trim();
+                                    timeBadges.push({
+                                        text: badgeText,
+                                        color: badge.dataset.color || 'purple',
+                                        type: badge.dataset.type || 'time'
+                                    });
+                                });
+                            }
+                            
+                            const months = [];
+                            
+                            // 遍歷每個月份格子
+                            subRow.querySelectorAll('.month-cell').forEach(cell => {
+                                const monthData = {
+                                    statuses: []
+                                };
+                                
+                                // 保存狀態方塊
+                                cell.querySelectorAll('.status-box').forEach(statusBox => {
+                                    const statusText = statusBox.childNodes[0].textContent.trim();
+                                    monthData.statuses.push({
+                                        text: statusText,
+                                        status: statusBox.dataset.status || statusBox.className.split(' ')[1],
+                                        customColor: statusBox.dataset.customColor || '',
+                                        style: statusBox.getAttribute('style') || ''
+                                    });
+                                });
+                                
+                                months.push(monthData);
+                            });
+                            
+                            subItems.push({
+                                uniqueId: uniqueId,
+                                name: subItemName,
+                                desc: subItemDesc,
+                                detailedDesc: detailedDesc,
+                                starred: isStarred,
+                                timeBadges: timeBadges,
+                                months: months
+                            });
+                        });
+                        
+                        projects.push({
+                            subItems: subItems
+                        });
+                    });
+                    
+                    categories.push({
+                        category: category,
+                        monthHeaders: monthHeaders,
+                        projects: projects
+                    });
+                });
+                
+                data.phases.push({
+                    phaseId: phaseId,
+                    phaseTitle: phaseTitle,
+                    isCollapsed: isCollapsed,
+                    phaseMonths: phaseMonths,
+                    phaseMonthNames: phaseMonthNames,
+                    categories: categories
+                });
+            });
+            
+            localStorage.setItem('projectTimelineData', JSON.stringify(data));
+            showNotification('已保存', 'success');
+            console.log('資料已自動保存');
+        }
+
+        // 載入資料
+        // 載入預設資料
+        function loadDefaultData() {
+            const section = document.querySelector('.category-section[data-category="product"]');
+            if (!section) return;
+            
+            const container = section.querySelector('.timeline-container');
+            const header = section.querySelector('.timeline-header');
+            
+            // 設定月份標題
+            const monthNames = ['4月', '5月', '6月', '7月'];
+            const monthHeadersContainer = header.querySelector('.month-headers');
+            monthHeadersContainer.innerHTML = '';
+            
+            monthNames.forEach(monthName => {
+                const monthHeader = document.createElement('div');
+                monthHeader.className = 'month-header';
+                monthHeader.textContent = monthName;
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-month-btn';
+                deleteBtn.innerHTML = '✕';
+                deleteBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    deleteMonth(this);
+                };
+                monthHeader.appendChild(deleteBtn);
+                monthHeadersContainer.appendChild(monthHeader);
+            });
+            
+            updateMonthCount('product');
+            
+            // 創建專案
+            const projectData = {
+                name: 'SPIP 2.0 討論核心與技術實作',
+                subItems: [
+                    {
+                        name: 'UI/UX 設計設備更新結果查詢頁',
+                        desc: '查詢畫面的呈現方式 (4/9、4/16、4/23、4/30討論)',
+                        months: ['discussion', 'discussion', 'completed', null]
+                    },
+                    {
+                        name: 'UI/UX 設計設備清單',
+                        desc: '羅列設備清單的選擇與操作 (4/2、4/30討論)',
+                        months: ['discussion', 'development', 'completed', null]
+                    },
+                    {
+                        name: '系統流程設計整合式申請書',
+                        desc: 'By證號親辦、代辦格式擬定申請書的格式與內容 (4/23討論)',
+                        months: ['discussion', 'development', 'completed', null]
+                    },
+                    {
+                        name: '系統流程設計個資法規與告知',
+                        desc: '包含更名流程重簽服務契約、告知聲明、第三方行銷 (4月底討論結案，待法務正式回覆)',
+                        months: ['discussion', 'completed', null, null]
+                    },
+                    {
+                        name: '數位皮夾影響更主檔',
+                        desc: 'SPIP2以證號查詢主檔時判定有TC特業，先行提示該證號更主檔需回原系統單筆受理 (SPIP2 6月底完成)',
+                        months: [null, 'development', 'completed', null]
+                    },
+                    {
+                        name: '同證不同名/人回歸原系統單筆受理',
+                        desc: '同證不同名，fORDER占大宗，但仍只有低比率，故此案例也會進行阻擋 (6月底完成)',
+                        months: [null, 'development', 'completed', null]
+                    },
+                    {
+                        name: '租=持證，持用人生日同步更後端',
+                        desc: 'mBMS租=持證，更租用人生日夜間排程同步CBM (mBMS 5月開發)',
+                        months: [null, 'development', 'completed', null]
+                    },
+                    {
+                        name: '租=持證，持用人生日同步更前端',
+                        desc: 'mBMS提供SPIP2客戶資料異動API，新增持用人姓名、生日 (mBMS 6月開發)',
+                        months: [null, 'development', 'development', 'completed']
+                    },
+                    {
+                        name: '即時更新同證<=5筆設備',
+                        desc: 'SPIP2一站式更主檔朝向可以即時更新同證<=5筆的設備 (7月底完成)',
+                        months: [null, null, 'development', 'completed']
+                    }
+                ]
+            };
+            
+            // 創建專案容器
+            const projectItem = document.createElement('div');
+            projectItem.className = 'project-item';
+            
+            // 第一個子項目作為項目標題
+            const createSubItem = (subData, isFirst) => {
+                const subRow = document.createElement('div');
+                subRow.className = 'sub-item-row';
+                
+                const subInfo = document.createElement('div');
+                subInfo.className = 'sub-item-info';
+                
+                const deleteFunction = isFirst ? 'deleteProject' : 'deleteSubItem';
+                
+                subInfo.innerHTML = `
+                    <div class="sub-title" ondblclick="editText(this)">
+                        ${subData.name}
+                        <span class="edit-icon" onclick="editText(this.parentElement)">✏️</span>
+                        <button class="delete-item-btn" onclick="${deleteFunction}(this)">🗑️</button>
+                    </div>
+                    <div class="sub-desc" ondblclick="editText(this)">
+                        ${subData.desc || '點擊編輯說明'}
+                    </div>
+                    <div class="time-badges">
+                        <span class="add-badge-btn" onclick="addBadge(this)">+ 時間標籤</span>
+                    </div>
+                `;
+                
+                subRow.appendChild(subInfo);
+                
+                // 添加月份格子上層（月份標示）
+                monthNames.forEach(monthName => {
+                    const monthCellTop = document.createElement('div');
+                    monthCellTop.className = 'month-cell-top';
+                    monthCellTop.textContent = monthName;
+                    subRow.appendChild(monthCellTop);
+                });
+                
+                // 為每個月份創建格子下層（狀態方塊）
+                subData.months.forEach(status => {
+                    const monthCell = document.createElement('div');
+                    monthCell.className = 'month-cell';
+                    
+                    if (status) {
+                        const statusBox = document.createElement('div');
+                        statusBox.className = `status-box ${status}`;
+                        statusBox.dataset.status = status;
+                        
+                        const statusNames = {
+                            'discussion': '討論',
+                            'development': '開發',
+                            'completed': '完成',
+                            'testing': '內測',
+                            'pending': '待處理'
+                        };
+                        statusBox.textContent = statusNames[status] || status;
+                        
+                        const removeBtn = document.createElement('button');
+                        removeBtn.className = 'remove-btn';
+                        removeBtn.innerHTML = '×';
+                        removeBtn.onclick = function(e) {
+                            e.stopPropagation();
+                            this.parentElement.parentElement.innerHTML = '';
+                            saveData();
+                        };
+                        
+                        statusBox.appendChild(removeBtn);
+                        monthCell.appendChild(statusBox);
+                    }
+                    
+                    subRow.appendChild(monthCell);
+                });
+                
+                return subRow;
+            };
+            
+            // 添加項目標題（第一個子項目）
+            projectItem.appendChild(createSubItem({
+                name: projectData.name,
+                desc: 'SPIP 2.0 專案時程規劃',
+                months: [null, null, null, null]
+            }, true));
+            
+            // 添加所有子項目
+            projectData.subItems.forEach(subData => {
+                projectItem.appendChild(createSubItem(subData, false));
+            });
+            
+            // 添加新增子項目按鈕
+            const addSubBtn = document.createElement('button');
+            addSubBtn.className = 'add-item-btn';
+            addSubBtn.onclick = function() { addSubItem(this); };
+            addSubBtn.textContent = '➕ 新增子項目';
+            projectItem.appendChild(addSubBtn);
+            
+            container.appendChild(projectItem);
+            
+            // 初始化拖放功能
+            initializeDragAndDrop();
+            
+            // 自動保存
+            saveData();
+        }
+
+        function loadData() {
+            const savedData = localStorage.getItem('projectTimelineData');
+            if (!savedData) {
+                console.log('無保存的資料');
+                return;
+            }
+            
+            try {
+                const data = JSON.parse(savedData);
+                const phasesContainer = document.getElementById('phasesContainer');
+                phasesContainer.innerHTML = '';
+                
+                // 如果沒有phases結構，說明是舊格式
+                if (!data.phases || data.phases.length === 0) {
+                    console.log('無階段資料');
+                    return;
+                }
+                
+                // 遍歷每個階段
+                data.phases.forEach(phaseData => {
+                    const phaseSection = document.createElement('div');
+                    phaseSection.className = 'phase-section';
+                    if (phaseData.isCollapsed) phaseSection.classList.add('collapsed');
+                    phaseSection.dataset.phaseId = phaseData.phaseId;
+                    
+                    // 获取第一个分类的月份数量作为阶段层的月份数量
+                    const firstCategory = phaseData.categories[0];
+                    const phaseMonthHeaders = firstCategory ? (firstCategory.monthHeaders || ['4月', '5月', '6月', '7月']) : ['4月', '5月', '6月', '7月'];
+                    const phaseMonthCount = phaseMonthHeaders.length;
+                    phaseSection.style.setProperty('--phase-month-count', phaseMonthCount);
+                    
+                    const phaseHeader = document.createElement('div');
+                    phaseHeader.className = 'phase-header';
+                    
+                    // 创建阶段信息区
+                    const phaseInfo = document.createElement('div');
+                    phaseInfo.className = 'phase-info';
+                    phaseInfo.innerHTML = `
+                        <div class="phase-title-row">
+                            <span class="phase-drag-handle" title="拖曳調整順序">⋮⋮</span>
+                            <span class="phase-title" ondblclick="editPhaseTitle(this, event)">${phaseData.phaseTitle}</span>
+                            <span class="phase-toggle" onclick="togglePhase(this.closest('.phase-header'), event)">▼</span>
+                        </div>
+                        <div class="phase-controls">
+                            <button class="add-phase-month-btn" onclick="addPhaseMonth('${phaseData.phaseId}', event)">➕ 月份</button>
+                            <button class="delete-phase-btn" onclick="deletePhase(this, event)">刪除階段</button>
+                        </div>
+                    `;
+                    phaseHeader.appendChild(phaseInfo);
+                    
+                    // 创建月份格子（从保存的数据或第一个分类的月份标题获取）
+                    const savedMonthNames = phaseData.phaseMonthNames || phaseMonthHeaders;
+                    savedMonthNames.forEach((monthName, index) => {
+                        const monthCell = document.createElement('div');
+                        monthCell.className = 'phase-month-cell month-cell';
+                        
+                        const monthHeader = document.createElement('div');
+                        monthHeader.className = 'phase-month-header';
+                        monthHeader.innerHTML = `
+                            <span class="phase-month-label" ondblclick="editPhaseMonth(this)">
+                                ${monthName}
+                                <button class="month-delete-btn" onclick="deletePhaseMonth(this, event)">✕</button>
+                            </span>
+                        `;
+                        
+                        const monthContent = document.createElement('div');
+                        monthContent.className = 'phase-month-content';
+                        
+                        // 恢复该月份的状态方块
+                        const monthData = phaseData.phaseMonths ? phaseData.phaseMonths[index] : null;
+                        if (monthData && monthData.statuses) {
+                            monthData.statuses.forEach(statusData => {
+                                const statusBox = document.createElement('div');
+                                statusBox.className = 'status-box';
+                                statusBox.textContent = statusData.text;
+                                statusBox.dataset.status = statusData.status;
+                                
+                                if (statusData.customColor) {
+                                    statusBox.style.background = `linear-gradient(135deg, ${statusData.customColor} 0%, ${adjustColor(statusData.customColor, -20)} 100%)`;
+                                    statusBox.dataset.customColor = statusData.customColor;
+                                } else {
+                                    statusBox.classList.add(statusData.status);
+                                }
+                                
+                                const removeBtn = document.createElement('button');
+                                removeBtn.className = 'remove-btn';
+                                removeBtn.innerHTML = '×';
+                                removeBtn.onclick = function(e) {
+                                    e.stopPropagation();
+                                    this.parentElement.remove();
+                                    saveData();
+                                };
+                                
+                                statusBox.appendChild(removeBtn);
+                                monthContent.appendChild(statusBox);
+                            });
+                        }
+                        
+                        monthCell.appendChild(monthHeader);
+                        monthCell.appendChild(monthContent);
+                        phaseHeader.appendChild(monthCell);
+                    });
+                    
+                    const phaseContent = document.createElement('div');
+                    phaseContent.className = 'phase-content';
+                    
+                    // 遍歷該階段內的每個分類
+                    phaseData.categories.forEach(categoryData => {
+                        const catSection = document.createElement('div');
+                        catSection.className = 'category-section';
+                        catSection.dataset.category = categoryData.category;
+                        catSection.dataset.phaseId = phaseData.phaseId;
+                        
+                        // 確定分類顏色
+                        let colorClass = 'ui-ux';
+                        if (categoryData.category.includes('system-flow')) colorClass = 'system-flow';
+                        if (categoryData.category.includes('tech-spec')) colorClass = 'tech-spec';
+                        
+                        // 確定分類名稱
+                        let catName = 'UI/UX 設計';
+                        if (categoryData.category.includes('system-flow')) catName = '系統流程設計';
+                        if (categoryData.category.includes('tech-spec')) catName = '系統功能與技術規格';
+                        
+                        const catHeader = document.createElement('div');
+                        catHeader.className = `category-header ${colorClass}`;
+                        catHeader.innerHTML = `
+                            ${catName}
+                            <button class="add-item-btn" onclick="addProject('${categoryData.category}')">➕ 新增項目</button>
+                        `;
+                        
+                        const container = document.createElement('div');
+                        container.className = 'timeline-container';
+                        
+                        // 創建時程表頭
+                        const header = document.createElement('div');
+                        header.className = `timeline-header ${colorClass}`;
+                        header.innerHTML = `
+                            <div>
+                                項目名稱
+                                <button class="add-month-btn" onclick="addMonth('${categoryData.category}')">➕ 月份</button>
+                            </div>
+                        `;
+                        
+                        // 添加月份標題
+                        const monthHeaders = categoryData.monthHeaders || ['4月', '5月', '6月', '7月'];
+                        const monthCount = monthHeaders.length;
+                        monthHeaders.forEach(monthName => {
+                            const monthHeader = document.createElement('div');
+                            monthHeader.className = 'month-header';
+                            monthHeader.setAttribute('ondblclick', 'editMonth(this)');
+                            monthHeader.innerHTML = `${monthName}<button class="month-delete-btn" onclick="deleteMonth(this, event)">✕</button>`;
+                            header.appendChild(monthHeader);
+                        });
+                        
+                        container.appendChild(header);
+                        
+                        // 更新CSS變數
+                        catSection.style.setProperty('--month-count', monthCount);
+                        
+                        // 重建專案結構
+                        categoryData.projects.forEach(projectData => {
+                            const projectItem = document.createElement('div');
+                            projectItem.className = 'project-item';
+                            
+                            projectData.subItems.forEach((subItemData, index) => {
+                                const subRow = document.createElement('div');
+                                subRow.className = 'sub-item-row';
+                                
+                                let timeBadgesHtml = '';
+                                if (subItemData.timeBadges && subItemData.timeBadges.length > 0) {
+                                    subItemData.timeBadges.forEach(badge => {
+                                        const badgeType = badge.type || 'time';
+                                        timeBadgesHtml += `
+                                            <span class="time-badge ${badge.color}" ondblclick="editBadge(this)" data-color="${badge.color}" data-type="${badgeType}">
+                                                ${badge.text}
+                                                <span class="delete-badge" onclick="deleteBadge(this, event)">×</span>
+                                            </span>
+                                        `;
+                                    });
+                                }
+                                
+                                const subItemInfo = document.createElement('div');
+                                subItemInfo.className = 'sub-item-info';
+                                
+                                const deleteFunction = index === 0 ? 'deleteProject' : 'deleteSubItem';
+                                
+                                // 星標圖標
+                                const starClass = subItemData.starred ? 'starred' : '';
+                                const starSymbol = subItemData.starred ? '★' : '☆';
+                                const starTitle = subItemData.starred ? '取消標記' : '標記為重要';
+                                
+                                // 詳細說明按鈕樣式
+                                const hasDetailDesc = subItemData.detailedDesc && subItemData.detailedDesc.trim();
+                                const detailBtnClass = hasDetailDesc ? 'detail-desc-btn has-content' : 'detail-desc-btn';
+                                const detailBtnTitle = hasDetailDesc ? '已有詳細說明（點擊查看）' : '添加詳細說明';
+                                
+                                subItemInfo.innerHTML = `
+                                    <div class="sub-title" ondblclick="editText(this)">
+                                        <span class="star-icon ${starClass}" onclick="toggleStar(this, event)" title="${starTitle}">${starSymbol}</span>
+                                        ${subItemData.name}
+                                        <span class="edit-icon" onclick="editText(this.parentElement)">✏️</span>
+                                        <button class="${detailBtnClass}" onclick="openDetailDesc(this)" title="${detailBtnTitle}">📋</button>
+                                        <button class="delete-item-btn" onclick="${deleteFunction}(this)">🗑️</button>
+                                    </div>
+                                    <div class="sub-desc" ondblclick="editText(this)">
+                                        ${subItemData.desc || '點擊編輯說明'}
+                                    </div>
+                                    <div class="time-badges">
+                                        ${timeBadgesHtml}
+                                        <span class="add-badge-btn" onclick="addBadge(this)">+ 時間標籤</span>
+                                    </div>
+                                `;
+                                subRow.appendChild(subItemInfo);
+                                
+                                // 設置唯一ID（如果沒有則生成新的，用於兼容舊數據）
+                                if (subItemData.uniqueId) {
+                                    subItemInfo.dataset.uniqueId = subItemData.uniqueId;
+                                } else {
+                                    subItemInfo.dataset.uniqueId = generateUniqueId();
+                                }
+                                
+                                // 設置詳細說明到 dataset
+                                if (subItemData.detailedDesc) {
+                                    subItemInfo.dataset.detailedDesc = subItemData.detailedDesc;
+                                }
+                                
+                                // 添加月份格子
+                                for (let i = 0; i < monthCount; i++) {
+                                    const monthCell = document.createElement('div');
+                                    monthCell.className = 'month-cell';
+                                    
+                                    const monthData = subItemData.months[i];
+                                    if (monthData && monthData.statuses) {
+                                        monthData.statuses.forEach(statusData => {
+                                            const statusBox = document.createElement('div');
+                                            statusBox.className = 'status-box';
+                                            statusBox.textContent = statusData.text;
+                                            statusBox.dataset.status = statusData.status;
+                                            
+                                            if (statusData.customColor) {
+                                                statusBox.style.background = `linear-gradient(135deg, ${statusData.customColor} 0%, ${adjustColor(statusData.customColor, -20)} 100%)`;
+                                                statusBox.dataset.customColor = statusData.customColor;
+                                            } else {
+                                                statusBox.classList.add(statusData.status);
+                                                if (statusData.style) {
+                                                    statusBox.setAttribute('style', statusData.style);
+                                                }
+                                            }
+                                            
+                                            const removeBtn = document.createElement('button');
+                                            removeBtn.className = 'remove-btn';
+                                            removeBtn.innerHTML = '×';
+                                            removeBtn.onclick = function(e) {
+                                                e.stopPropagation();
+                                                this.parentElement.parentElement.innerHTML = '';
+                                                saveData();
+                                            };
+                                            
+                                            statusBox.appendChild(removeBtn);
+                                            monthCell.appendChild(statusBox);
+                                        });
+                                    }
+                                    
+                                    subRow.appendChild(monthCell);
+                                }
+                                
+                                projectItem.appendChild(subRow);
+                            });
+                            
+                            // 添加子項目按鈕
+                            const addSubBtn = document.createElement('button');
+                            addSubBtn.className = 'add-item-btn';
+                            addSubBtn.onclick = function() { addSubItem(this); };
+                            addSubBtn.textContent = '➕ 新增子項目';
+                            projectItem.appendChild(addSubBtn);
+                            
+                            container.appendChild(projectItem);
+                        });
+                        
+                        catSection.appendChild(catHeader);
+                        catSection.appendChild(container);
+                        phaseContent.appendChild(catSection);
+                    });
+                    
+                    phaseSection.appendChild(phaseHeader);
+                    phaseSection.appendChild(phaseContent);
+                    phasesContainer.appendChild(phaseSection);
+                });
+                
+                // 重新初始化拖放事件
+                initializeDragAndDrop();
+                
+                // 初始化階段拖拽功能
+                initializePhaseDragAndDrop();
+                
+                console.log('資料已成功載入');
+                
+                // 檢查是否有舊版數據缺少 uniqueId，如果有則自動保存以更新數據
+                let hasOldData = false;
+                data.phases.forEach(phase => {
+                    phase.categories.forEach(category => {
+                        category.projects.forEach(project => {
+                            project.subItems.forEach(subItem => {
+                                if (!subItem.uniqueId) {
+                                    hasOldData = true;
+                                }
+                            });
+                        });
+                    });
+                });
+                
+                // 如果發現舊版數據，自動保存以更新 uniqueId
+                if (hasOldData) {
+                    console.log('檢測到舊版數據，正在自動更新 uniqueId...');
+                    saveData();
+                    console.log('uniqueId 已更新並保存');
+                }
+            } catch (e) {
+                console.error('載入資料失敗:', e);
+            }
+        }
+
+        // ==================== 數據導出/匯入功能 ====================
+        
+        // 導出數據為 JSON 文件
+        function exportData() {
+            try {
+                // 收集所有需要導出的數據
+                const exportData = {
+                    version: '1.0',
+                    exportDate: new Date().toISOString(),
+                    projectTimelineData: localStorage.getItem('projectTimelineData'),
+                    customStatuses: localStorage.getItem('customStatuses')
+                };
+                
+                // 轉換為 JSON 字符串（美化格式）
+                const jsonString = JSON.stringify(exportData, null, 2);
+                
+                // 創建 Blob 對象
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                
+                // 創建下載鏈接
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                // 生成文件名（包含時間戳）
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+                a.download = `project-timeline-backup-${timestamp}.json`;
+                
+                // 觸發下載
+                document.body.appendChild(a);
+                a.click();
+                
+                // 清理
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // 顯示成功提示
+                showNotification('✓ 數據已成功導出！', 'success');
+                
+                console.log('數據導出成功');
+            } catch (error) {
+                console.error('導出失敗:', error);
+                showNotification('❌ 導出失敗：' + error.message, 'error');
+            }
+        }
+        
+        // 匯入數據從 JSON 文件
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // 確認是否覆蓋現有數據
+            if (!confirm('⚠️ 匯入數據將覆蓋當前所有內容！\n\n建議先導出當前數據作為備份。\n\n確定要繼續嗎？')) {
+                event.target.value = ''; // 重置文件輸入
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    // 解析 JSON 數據
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    // 驗證數據格式
+                    if (!importedData.version) {
+                        throw new Error('無效的數據格式：缺少版本信息');
+                    }
+                    
+                    // 備份當前數據（以防萬一）
+                    const backupData = {
+                        projectTimelineData: localStorage.getItem('projectTimelineData'),
+                        customStatuses: localStorage.getItem('customStatuses')
+                    };
+                    localStorage.setItem('projectTimelineBackup', JSON.stringify(backupData));
+                    
+                    // 導入數據到 localStorage
+                    if (importedData.projectTimelineData) {
+                        localStorage.setItem('projectTimelineData', importedData.projectTimelineData);
+                    }
+                    if (importedData.customStatuses) {
+                        localStorage.setItem('customStatuses', importedData.customStatuses);
+                    }
+                    
+                    // 重新讀取 customStatuses 變數
+                    customStatuses = JSON.parse(localStorage.getItem('customStatuses') || '[]');
+                    
+                    // 清空現有的狀態工具箱中的自定義狀態
+                    const statusBlocks = document.getElementById('statusBlocks');
+                    const customBlocks = statusBlocks.querySelectorAll('.status-block[data-status^="custom-"]');
+                    customBlocks.forEach(block => block.remove());
+                    
+                    // 重新載入自定義狀態
+                    customStatuses.forEach(status => {
+                        addStatusBlock(status.name, status.color, status.id);
+                    });
+                    
+                    // 清空階段容器
+                    const phasesContainer = document.getElementById('phasesContainer');
+                    if (phasesContainer) {
+                        phasesContainer.innerHTML = '';
+                    }
+                    
+                    // 重新載入項目數據
+                    loadData();
+                    
+                    // 重新初始化拖放功能
+                    initializeDragAndDrop();
+                    
+                    // 顯示成功提示
+                    showNotification('✓ 數據已成功匯入！頁面將重新載入...', 'success');
+                    
+                    // 延遲後重新載入頁面以確保所有數據正確顯示
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                    
+                    console.log('數據匯入成功');
+                } catch (error) {
+                    console.error('匯入失敗:', error);
+                    showNotification('❌ 匯入失敗：' + error.message, 'error');
+                }
+            };
+            
+            reader.onerror = function() {
+                showNotification('❌ 文件讀取失敗', 'error');
+            };
+            
+            // 讀取文件內容
+            reader.readAsText(file);
+            
+            // 重置文件輸入，允許重複選擇同一文件
+            event.target.value = '';
+        }
+        
+        // 顯示通知（增強版）
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('saveNotification');
+            const icon = notification.querySelector('.save-icon');
+            const text = notification.querySelector('span:last-child');
+            
+            // 設置圖標和文字
+            if (type === 'error') {
+                icon.textContent = '✗';
+                notification.classList.add('error');
+            } else {
+                icon.textContent = '✓';
+                notification.classList.remove('error');
+            }
+            text.textContent = message;
+            
+            // 顯示通知
+            notification.classList.add('show');
+            
+            // 3秒後自動隱藏
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 頁面載入時初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 載入自定義狀態
+            loadCustomStatuses();
+            
+            // 載入項目數據
+            loadData();
+            
+            // 初始化階段拖拽功能
+            initializePhaseDragAndDrop();
+            
+            // 初始化所有類別的月份數量
+            document.querySelectorAll('.category-section').forEach(section => {
+                const category = section.dataset.category;
+                updateMonthCount(category);
+            });
+            
+            // 初始化拖放功能
+            initializeDragAndDrop();
+        });
+    </script>
+
+</body>
+</html>
